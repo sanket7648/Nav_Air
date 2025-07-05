@@ -22,6 +22,7 @@ export const generateOTP = () => {
 // Send verification email
 export const sendVerificationEmail = async (email, username, verificationToken) => {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  const otpUrl = `${process.env.FRONTEND_URL}/otp-verify`;
   
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -43,7 +44,12 @@ export const sendVerificationEmail = async (email, username, verificationToken) 
         <p>Or copy and paste this link into your browser:</p>
         <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
         
-        <p>This link will expire in 10 minutes for security reasons.</p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="color: #333; font-size: 14px;">Alternatively, you can verify your account using the OTP sent to your email.</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${otpUrl}" style="color: #007bff; text-decoration: underline; font-weight: bold;">Enter OTP here</a>
+        </div>
+        <p>This link and OTP will expire in 10 minutes for security reasons.</p>
         
         <p>If you didn't create an account, please ignore this email.</p>
         
@@ -73,6 +79,40 @@ export const verifyTransporter = async () => {
     return true;
   } catch (error) {
     console.error('Email transporter verification failed:', error);
+    return false;
+  }
+};
+
+// Send OTP email
+export const sendOtpEmail = async (email, username, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Your OTP Code for Verification',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333; text-align: center;">OTP Verification</h2>
+        <p>Hi ${username},</p>
+        <p>Your One-Time Password (OTP) for email verification is:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <span style="font-size: 2rem; letter-spacing: 8px; color: #007bff; font-weight: bold;">${otp}</span>
+        </div>
+        <p>This OTP will expire in 10 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          This is an automated email, please do not reply.
+        </p>
+      </div>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('OTP email sent:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
     return false;
   }
 }; 

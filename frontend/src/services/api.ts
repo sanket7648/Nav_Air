@@ -12,10 +12,10 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config) => {
     const token = localStorage.getItem('authToken');
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      (config.headers as any).Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -73,6 +73,12 @@ export const authAPI = {
   // Google OAuth URL
   getGoogleAuthUrl: () => {
     return `${API_BASE_URL}/auth/google`;
+  },
+
+  // Verify OTP
+  verifyOtp: async (data: { otp: string }) => {
+    const response = await api.post('/auth/verify-otp', data);
+    return response.data;
   },
 };
 

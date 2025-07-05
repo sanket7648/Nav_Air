@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
     verification_token VARCHAR(255),
     verification_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    otp_code VARCHAR(10),
+    otp_expires TIMESTAMP
 );
 
 -- Create index on email for faster lookups

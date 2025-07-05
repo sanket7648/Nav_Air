@@ -17,12 +17,20 @@ export const AuthCallback: React.FC = () => {
 
       if (success === 'true' && token) {
         try {
-          // Store the token (user data will be fetched later)
+          // Store the token
           authUtils.setAuth(token, {});
+
+          // Fetch user profile from backend
+          const meRes = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const meData = await meRes.json();
+          if (meData && meData.user) {
+            localStorage.setItem('user', JSON.stringify(meData.user));
+          }
+
           setStatus('success');
           setMessage('Authentication successful! Redirecting...');
-          
-          // Redirect to home page after a short delay
           setTimeout(() => {
             navigate('/', { replace: true });
           }, 2000);

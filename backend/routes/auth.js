@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import pool from '../config/database.js';
 import { generateToken, generateVerificationToken, verifyVerificationToken } from '../utils/jwt.js';
-import { sendVerificationEmail } from '../services/emailService.js';
+import { sendVerificationEmail, generateOTP, sendOtpEmail } from '../services/emailService.js';
 import { authenticateToken, checkUserVerified } from '../middleware/auth.js';
 import { validateRegistration, validateLogin, validateEmailVerification } from '../middleware/validation.js';
 
@@ -40,35 +40,39 @@ router.post('/register', validateRegistration, async (req, res) => {
 
     // Generate verification token
     const verificationToken = generateVerificationToken();
-
-    // Calculate expiry time (10 minutes from now)
     const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     // Insert user into database
     const result = await pool.query(
-      `INSERT INTO users (email, hashed_password, username, contact_number, country, verification_token, verification_expires)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (email, hashed_password, username, contact_number, country, verification_token, verification_expires, otp_code, otp_expires)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, email, username`,
-      [email, hashedPassword, username, contact_number, country, verificationToken, verificationExpires]
+      [email, hashedPassword, username, contact_number, country, verificationToken, verificationExpires, otp, otpExpires]
     );
 
     const user = result.rows[0];
 
-    // Send verification email
+    // Send verification email (link)
     const emailSent = await sendVerificationEmail(email, username, verificationToken);
+    // Send OTP email
+    const otpSent = await sendOtpEmail(email, username, otp);
 
-    if (!emailSent) {
-      // If email fails, delete the user
+    if (!emailSent && !otpSent) {
+      // If both emails fail, delete the user
       await pool.query('DELETE FROM users WHERE id = $1', [user.id]);
       return res.status(500).json({
         success: false,
-        message: 'Failed to send verification email. Please try again.'
+        message: 'Failed to send verification email and OTP. Please try again.'
       });
     }
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful. Please check your email to verify your account.',
+      message: 'Registration successful. Please check your email to verify your account (link or OTP).',
       user: {
         id: user.id,
         email: user.email,
@@ -139,6 +143,40 @@ router.post('/verify-email', validateEmailVerification, async (req, res) => {
       success: false,
       message: 'Internal server error'
     });
+  }
+});
+
+// OTP verification endpoint
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { otp } = req.body;
+    if (!otp) {
+      return res.status(400).json({ success: false, message: 'OTP is required.' });
+    }
+    // Find user by OTP
+    const result = await pool.query('SELECT id, otp_code, otp_expires, is_verified FROM users WHERE otp_code = $1', [otp]);
+    if (result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
+    }
+    const user = result.rows[0];
+    if (user.is_verified) {
+      return res.status(400).json({ success: false, message: 'User already verified.' });
+    }
+    if (!user.otp_code || !user.otp_expires) {
+      return res.status(400).json({ success: false, message: 'No OTP found for this user.' });
+    }
+    if (user.otp_code !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP.' });
+    }
+    if (new Date() > new Date(user.otp_expires)) {
+      return res.status(400).json({ success: false, message: 'OTP has expired.' });
+    }
+    // Mark user as verified and clear OTP fields
+    await pool.query('UPDATE users SET is_verified = true, otp_code = NULL, otp_expires = NULL WHERE id = $1', [user.id]);
+    res.json({ success: true, message: 'OTP verified successfully. You can now login.' });
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
 const countries = [
@@ -21,6 +21,7 @@ export const RegisterUser: React.FC = () => {
     contact_number: '',
     country: '',
   });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,7 +36,8 @@ export const RegisterUser: React.FC = () => {
 
     try {
       const response = await authAPI.register(form);
-      setSuccess(true);
+      // Redirect to OTP verification page with email
+      navigate('/otp-verify', { state: { email: form.email } });
     } catch (error: any) {
       // Check for validation errors from backend
       if (error.response?.data?.errors) {
@@ -63,14 +65,6 @@ export const RegisterUser: React.FC = () => {
           <h2 className="text-base font-bold text-neutral-900 dark:text-white mb-0.5">Create Account</h2>
           <p className="text-neutral-500 dark:text-neutral-300 text-[11px]">Register for your NavAir experience</p>
         </div>
-
-        {/* Success Message */}
-        {success && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-sm relative z-10">
-            <CheckCircle className="w-4 h-4 flex-shrink-0" />
-            <span>Registration successful! Please check your email to verify your account.</span>
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (

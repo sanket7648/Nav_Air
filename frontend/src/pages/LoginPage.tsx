@@ -24,19 +24,7 @@ export const LoginPage: React.FC = () => {
       const response = await authAPI.login(form);
       authUtils.setAuth(response.token, response.user);
       localStorage.setItem('token', response.token);
-
-      // Fetch user profile from /api/auth/me
-      const meRes = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${response.token}` }
-      });
-      const meData = await meRes.json();
-      if (meData && meData.user) {
-        localStorage.setItem('user', JSON.stringify(meData.user));
-        console.log("Saved user to localStorage:", meData.user);
-      } else {
-        localStorage.setItem('user', JSON.stringify(response.user));
-        console.log("Saved fallback user to localStorage:", response.user);
-      }
+      localStorage.setItem('user', JSON.stringify(response.user));
 
       navigate('/', { replace: true });
     } catch (error: any) {

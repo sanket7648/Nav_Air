@@ -9,27 +9,28 @@ import { FlightUpdatesPage } from './pages/FlightUpdatesPage';
 import { EmergencyAssistancePage } from './pages/EmergencyAssistancePage';
 import { SlotBookingPage } from './pages/SlotBookingPage';
 import { ArtGuidePage } from './pages/ArtGuidePage';
-import { LoginPage } from './pages/login';
+import { LoginPage } from './pages/LoginPage';
 import { RegisterUser } from './pages/registeruser';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { AuthCallback } from './pages/AuthCallback';
 import GoogleCallback from './pages/GoogleCallback';
+import OtpVerificationPage from './pages/OtpVerificationPage';
+import OtpSuccessPage from './pages/OtpSuccessPage';
 
 function AppContent() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/verify-email' || location.pathname === '/auth/callback';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/verify-email' || location.pathname === '/auth/callback' || location.pathname === '/otp-verify' || location.pathname === '/otp-success';
 
   if (isAuthPage) {
     return (
-      <>
-        <Navigation />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterUser />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-        </Routes>
-      </>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterUser />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/otp-verify" element={<OtpVerificationPage />} />
+        <Route path="/otp-success" element={<OtpSuccessPage />} />
+      </Routes>
     );
   }
 
