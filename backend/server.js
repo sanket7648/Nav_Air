@@ -69,9 +69,13 @@ app.use((error, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    // Test database connection
-    await pool.query('SELECT NOW()');
-    console.log('✅ Database connected successfully');
+    try {
+      await pool.connect();
+      await pool.query('SELECT NOW()');
+      console.log('✅ Database connected successfully');
+    } catch (error) {
+      console.error('Error connecting to database:', error);
+    }
 
     // Test email transporter
     await verifyTransporter();

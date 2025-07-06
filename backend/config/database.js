@@ -15,14 +15,22 @@ const pool = new Pool({
     rejectUnauthorized: false,
     sslmode: 'require'
   },
-  max: 20,
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
+  acquireTimeoutMillis: 10000,
+  reapIntervalMillis: 1000,
+  createTimeoutMillis: 10000,
+  destroyTimeoutMillis: 5000,
 });
 
 // Test the connection
 pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
+  // Only log the first connection to avoid multiple messages
+  if (!pool._loggedConnection) {
+    console.log('Connected to PostgreSQL database');
+    pool._loggedConnection = true;
+  }
 });
 
 pool.on('error', (err) => {
