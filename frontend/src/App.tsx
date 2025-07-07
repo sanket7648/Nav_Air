@@ -16,6 +16,7 @@ import { AuthCallback } from './pages/AuthCallback';
 import GoogleCallback from './pages/GoogleCallback';
 import OtpVerificationPage from './pages/OtpVerificationPage';
 import OtpSuccessPage from './pages/OtpSuccessPage';
+import Footer from './components/Footer';
 
 function AppContent() {
   const location = useLocation();
@@ -50,6 +51,7 @@ function AppContent() {
         </Routes>
       </main>
       <FloatingActionButton />
+      <Footer />
     </div>
   );
 }

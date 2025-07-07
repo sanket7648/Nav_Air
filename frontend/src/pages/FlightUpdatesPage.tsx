@@ -127,25 +127,24 @@ export const FlightUpdatesPage: React.FC = () => {
     : flights.filter(flight => flight.status === selectedFilter);
 
   return (
-    <div className="pt-36 px-4 pb-8">
+    <div className="pt-32 px-2 pb-4 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Flight Updates</h2>
-        <p className="text-gray-600">Real-time departure information</p>
+      <div className="mb-3">
+        <h2 className="text-xl font-bold text-gray-900 mb-0.5">Flight Updates</h2>
+        <p className="text-gray-600 text-sm">Real-time departure information</p>
       </div>
-
       {/* Current Time */}
-      <div className="mb-6">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white">
+      <div className="mb-3">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-3 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="text-xl font-bold">
                 {currentTime.toLocaleTimeString('en-US', { 
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}
               </div>
-              <div className="text-sm text-blue-100">
+              <div className="text-xs text-blue-100">
                 {currentTime.toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   month: 'long', 
@@ -154,16 +153,15 @@ export const FlightUpdatesPage: React.FC = () => {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-blue-100">San Francisco</div>
-              <div className="text-xs text-blue-200">PST</div>
+              <div className="text-xs text-blue-100">San Francisco</div>
+              <div className="text-[10px] text-blue-200">PST</div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Filters */}
-      <div className="mb-6">
-        <div className="flex space-x-2 overflow-x-auto pb-2">
+      <div className="mb-3">
+        <div className="flex space-x-1 overflow-x-auto pb-1">
           {[
             { key: 'all', label: 'All Flights' },
             { key: 'delayed', label: 'Delayed' },
@@ -173,7 +171,7 @@ export const FlightUpdatesPage: React.FC = () => {
             <button
               key={filter.key}
               onClick={() => setSelectedFilter(filter.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 selectedFilter === filter.key
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -184,9 +182,8 @@ export const FlightUpdatesPage: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Flight Cards */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filteredFlights.map((flight) => {
           const StatusIcon = getStatusIcon(flight.status);
           const timeUntil = getTimeUntilFlight(flight.scheduledTime);
@@ -195,9 +192,9 @@ export const FlightUpdatesPage: React.FC = () => {
           return (
             <div
               key={flight.id}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
+              className="bg-white rounded-2xl p-3 shadow-sm border border-gray-200"
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <Plane className="w-5 h-5 text-blue-600" />
@@ -219,7 +216,7 @@ export const FlightUpdatesPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg font-semibold text-gray-900">SFO</span>
                   <ArrowRight className="w-4 h-4 text-gray-400" />
@@ -233,7 +230,7 @@ export const FlightUpdatesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 mb-2">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">Scheduled</div>
                   <div className="text-lg font-semibold text-gray-900">

@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
-import pool, { queryWithRetry } from '../config/database.js';
+import { query } from '../config/database.js';
 import { generateToken, generateVerificationToken, verifyVerificationToken } from '../utils/jwt.js';
 import { sendVerificationEmail, generateOTP, sendOtpEmail } from '../services/emailService.js';
 import { authenticateToken, checkUserVerified } from '../middleware/auth.js';
@@ -22,7 +22,7 @@ router.post('/register', validateRegistration, async (req, res) => {
     const { email, password, username, contact_number, country } = req.body;
 
     // Check if user already exists
-    const existingUser = await queryWithRetry(
+    const existingUser = await query(
       'SELECT id FROM users WHERE email = $1 OR username = $2',
       [email, username]
     );
@@ -47,7 +47,7 @@ router.post('/register', validateRegistration, async (req, res) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     // Insert user into database
-    const result = await queryWithRetry(
+    const result = await query(
       `INSERT INTO users (email, hashed_password, username, contact_number, country, verification_token, verification_expires, otp_code, otp_expires)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, email, username`,
@@ -63,7 +63,7 @@ router.post('/register', validateRegistration, async (req, res) => {
 
     if (!emailSent && !otpSent) {
       // If both emails fail, delete the user
-      await queryWithRetry('DELETE FROM users WHERE id = $1', [user.id]);
+      await query('DELETE FROM users WHERE id = $1', [user.id]);
       return res.status(500).json({
         success: false,
         message: 'Failed to send verification email and OTP. Please try again.'
@@ -104,7 +104,7 @@ router.post('/verify-email', validateEmailVerification, async (req, res) => {
     }
 
     // Find user with this verification token
-    const result = await queryWithRetry(
+    const result = await query(
       'SELECT id, email, username, verification_expires FROM users WHERE verification_token = $1',
       [token]
     );
@@ -127,7 +127,7 @@ router.post('/verify-email', validateEmailVerification, async (req, res) => {
     }
 
     // Update user as verified
-    await queryWithRetry(
+    await query(
       'UPDATE users SET is_verified = true, verification_token = NULL, verification_expires = NULL WHERE id = $1',
       [user.id]
     );
@@ -154,7 +154,7 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP is required.' });
     }
     // Find user by OTP
-    const result = await queryWithRetry('SELECT id, otp_code, otp_expires, is_verified FROM users WHERE otp_code = $1', [otp]);
+    const result = await query('SELECT id, otp_code, otp_expires, is_verified FROM users WHERE otp_code = $1', [otp]);
     if (result.rows.length === 0) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
     }
@@ -172,7 +172,7 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP has expired.' });
     }
     // Mark user as verified and clear OTP fields
-    await queryWithRetry('UPDATE users SET is_verified = true, otp_code = NULL, otp_expires = NULL WHERE id = $1', [user.id]);
+    await query('UPDATE users SET is_verified = true, otp_code = NULL, otp_expires = NULL WHERE id = $1', [user.id]);
     res.json({ success: true, message: 'OTP verified successfully. You can now login.' });
   } catch (error) {
     console.error('OTP verification error:', error);
@@ -186,9 +186,9 @@ router.post('/login', validateLogin, checkUserVerified, async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const result = await queryWithRetry(
-      'SELECT id, email, username, hashed_password FROM users WHERE email = $1',
-      [email]
+    const result = await query(
+      'SELECT id, email, username, hashed_password FROM users WHERE LOWER(email) = $1',
+      [email.toLowerCase()]
     );
 
     if (result.rows.length === 0) {
@@ -263,47 +263,46 @@ router.get('/google/callback', async (req, res) => {
       idToken: tokens.id_token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-
     const payload = ticket.getPayload();
-    const { sub: googleId, email, name } = payload;
+    const { sub: google_id, email, name } = payload;
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if user exists
-    let result = await queryWithRetry(
-      'SELECT id, email, username, is_verified FROM users WHERE google_id = $1 OR email = $2',
-      [googleId, email]
+    // 1. Check if the user already exists (case-insensitive)
+    const { rows } = await query(
+      'SELECT * FROM users WHERE LOWER(email) = $1',
+      [normalizedEmail]
     );
 
     let user;
 
-    if (result.rows.length > 0) {
-      // User exists, update google_id if not set
-      user = result.rows[0];
+    if (rows.length > 0) {
+      // User exists
+      user = rows[0];
+      // Optionally update google_id if not set
       if (!user.google_id) {
-        await queryWithRetry(
-          'UPDATE users SET google_id = $1 WHERE id = $2',
-          [googleId, user.id]
-        );
+        await query('UPDATE users SET google_id = $1 WHERE id = $2', [google_id, user.id]);
+        user.google_id = google_id;
       }
+      console.log(`User found: ${user.email}. Logging in.`);
     } else {
-      // Create new user
-      result = await queryWithRetry(
-        `INSERT INTO users (email, username, google_id, is_verified)
-         VALUES ($1, $2, $3, true)
-         RETURNING id, email, username, is_verified`,
-        [email, name, googleId]
+      // User does not exist, create new
+      console.log(`New user: ${normalizedEmail}. Creating account.`);
+      const newUserResult = await query(
+        'INSERT INTO users (email, username, google_id, is_verified) VALUES ($1, $2, $3, $4) RETURNING *',
+        [normalizedEmail, name, google_id, true]
       );
-      user = result.rows[0];
+      user = newUserResult.rows[0];
     }
 
-    // Generate JWT token
+    // Generate JWT
     const token = generateToken({ userId: user.id });
 
-    // Redirect to frontend with token
+    // Redirect or respond as needed
     const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${token}&success=true`;
     res.redirect(redirectUrl);
 
   } catch (error) {
-    console.error('Google OAuth error:', error);
+    console.error("Google OAuth callback error:", error);
     const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?success=false&message=Authentication failed`;
     res.redirect(redirectUrl);
   }
@@ -312,7 +311,7 @@ router.get('/google/callback', async (req, res) => {
 // Get current user
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const result = await queryWithRetry(
+    const result = await query(
       'SELECT id, email, username, contact_number, country, created_at FROM users WHERE id = $1',
       [req.user.id]
     );

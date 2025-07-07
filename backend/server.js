@@ -4,7 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
-import pool from './config/database.js';
+import baggageRoutes from './routes/baggage.js';
+import db, { query, checkDatabaseHealth, closePool } from './config/database.js';
 import { verifyTransporter } from './services/emailService.js';
 
 // Load environment variables
@@ -48,6 +49,15 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/baggage', baggageRoutes);
+
+app.get('/test-user', async (req, res) => {
+  const result = await query(
+    'SELECT id, email FROM users WHERE LOWER(email) = $1',
+    ['sanketjha177@gmail.com']
+  );
+  res.json(result);
+});
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -70,8 +80,7 @@ app.use((error, req, res, next) => {
 const startServer = async () => {
   try {
     try {
-      await pool.connect();
-      await pool.query('SELECT NOW()');
+      await query('SELECT NOW()');
       console.log('✅ Database connected successfully');
     } catch (error) {
       console.error('Error connecting to database:', error);
@@ -97,12 +106,12 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
-  await pool.end();
+  await closePool();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
-  await pool.end();
+  await closePool();
   process.exit(0);
 }); 

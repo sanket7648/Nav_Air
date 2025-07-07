@@ -23,4 +23,15 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 
 -- Create index on verification_token for faster lookups
-CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token); 
+CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
+
+-- Create baggage table
+CREATE TABLE IF NOT EXISTS baggage (
+    bag_id VARCHAR(32) PRIMARY KEY,
+    flight_number VARCHAR(16) NOT NULL,
+    carousel_number INT,
+    timestamps JSONB NOT NULL
+);
+
+-- Add unique index on LOWER(email)
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email)); 

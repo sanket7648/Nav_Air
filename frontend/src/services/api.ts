@@ -113,4 +113,32 @@ export const authUtils = {
   },
 };
 
+export const baggageAPI = {
+  // List all baggage
+  list: async () => {
+    const res = await api.get('/baggage');
+    return res.data;
+  },
+  // Get baggage by bagId
+  get: async (bagId: string) => {
+    const res = await api.get(`/baggage/${bagId}`);
+    return res.data;
+  },
+  // Create new baggage
+  create: async (data: { bagId?: string; flightNumber: string; carouselNumber: number }) => {
+    const res = await api.post('/baggage', data);
+    return res.data;
+  },
+  // Update baggage status
+  updateStatus: async (bagId: string, status: string) => {
+    const res = await api.patch(`/baggage/${bagId}/status`, { status });
+    return res.data;
+  },
+  // Delete baggage
+  remove: async (bagId: string) => {
+    const res = await api.delete(`/baggage/${bagId}`);
+    return res.data;
+  },
+};
+
 export default api; 

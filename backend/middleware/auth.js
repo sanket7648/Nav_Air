@@ -1,5 +1,5 @@
 import { verifyToken } from '../utils/jwt.js';
-import pool from '../config/database.js';
+import { query } from '../config/database.js';
 
 // Middleware to verify JWT token
 export const authenticateToken = async (req, res, next) => {
@@ -23,7 +23,7 @@ export const authenticateToken = async (req, res, next) => {
     }
 
     // Get user from database
-    const result = await pool.query(
+    const result = await query(
       'SELECT id, email, username, is_verified FROM users WHERE id = $1',
       [decoded.userId]
     );
@@ -61,10 +61,16 @@ export const checkUserVerified = async (req, res, next) => {
   const { email } = req.body;
 
   try {
-    const result = await pool.query(
-      'SELECT is_verified FROM users WHERE email = $1',
-      [email]
-    );
+    let result;
+    try {
+      result = await query(
+        'SELECT id, email, username, is_verified, google_id FROM users WHERE LOWER(email) = $1',
+        [email.toLowerCase()]
+      );
+      console.log('SELECT by email result:', result && result.rows);
+    } catch (err) {
+      console.error('Error during SELECT by email:', err);
+    }
 
     if (result.rows.length === 0) {
       return res.status(404).json({ 

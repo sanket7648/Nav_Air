@@ -108,15 +108,15 @@ export const SlotBookingPage: React.FC = () => {
   const selectedServiceData = services.find(s => s.id === selectedService);
 
   return (
-    <div className="pt-36 px-4 pb-8">
+    <div className="pt-32 px-2 pb-4 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Slot Booking</h2>
-        <p className="text-gray-600">Reserve your preferred time slots</p>
+      <div className="mb-3">
+        <h2 className="text-xl font-bold text-gray-900 mb-0.5">Slot Booking</h2>
+        <p className="text-gray-600 text-sm">Reserve your preferred time slots</p>
       </div>
 
       {/* Progress Indicator */}
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="flex items-center justify-between">
           {[
             { step: 1, title: 'Service', icon: Users },
@@ -126,23 +126,22 @@ export const SlotBookingPage: React.FC = () => {
             const Icon = item.icon;
             const isActive = bookingStep >= item.step;
             const isCurrent = bookingStep === item.step;
-            
             return (
               <div key={item.step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
                   isActive 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <div className={`ml-2 text-sm font-medium ${
+                <div className={`ml-1.5 text-xs font-medium ${
                   isCurrent ? 'text-blue-600' : 'text-gray-600'
                 }`}>
                   {item.title}
                 </div>
                 {index < 2 && (
-                  <ArrowRight className="w-4 h-4 text-gray-400 mx-4" />
+                  <ArrowRight className="w-3 h-3 text-gray-400 mx-2" />
                 )}
               </div>
             );
@@ -152,41 +151,39 @@ export const SlotBookingPage: React.FC = () => {
 
       {/* Step 1: Service Selection */}
       {bookingStep === 1 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Service</h3>
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold text-gray-900 mb-2">Select Service</h3>
           {services.map((service) => {
             const Icon = service.icon;
             const isSelected = selectedService === service.id;
-            
             return (
               <button
                 key={service.id}
                 onClick={() => setSelectedService(service.id)}
-                className={`w-full p-4 rounded-xl border-2 transition-all ${
+                className={`w-full p-3 rounded-xl border-2 transition-all ${
                   isSelected
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${service.color}`}>
-                    <Icon className="w-6 h-6 text-white" />
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${service.color}`}>
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-gray-900">{service.title}</h4>
-                    <p className="text-sm text-gray-600">{service.description}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm">{service.title}</h4>
+                    <p className="text-xs text-gray-600">{service.description}</p>
                   </div>
                   {isSelected && (
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
                   )}
                 </div>
               </button>
             );
           })}
-          
           <button
             onClick={() => setBookingStep(2)}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors mt-6"
+            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors mt-4 text-sm"
           >
             Continue
           </button>

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pool from './config/database.js';
+import { query, closePool } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,21 +24,21 @@ async function setupDatabase() {
     for (const statement of statements) {
       if (statement.trim()) {
         console.log('Executing:', statement.substring(0, 50) + '...');
-        await pool.query(statement);
+        await query(statement);
       }
     }
     
     console.log('✅ Database setup completed successfully!');
     
     // Test the connection by querying the users table
-    const result = await pool.query('SELECT COUNT(*) FROM users');
+    const result = await query('SELECT COUNT(*) FROM users');
     console.log(`📊 Users table created with ${result.rows[0].count} records`);
     
   } catch (error) {
     console.error('❌ Error setting up database:', error.message);
     process.exit(1);
   } finally {
-    await pool.end();
+    await closePool();
   }
 }
 

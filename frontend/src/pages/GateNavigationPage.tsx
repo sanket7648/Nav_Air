@@ -82,16 +82,16 @@ export const GateNavigationPage: React.FC = () => {
   return (
     <div className="pt-36 px-6 pb-8 min-h-screen bg-gradient-to-br from-neutral-50 via-emerald-50/30 to-teal-50/20">
       {/* Header */}
-      <div className="mb-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-8 text-white">
+      <div className="mb-4">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-4 text-white">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-teal-600/20 to-cyan-600/20"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-32 translate-x-32"></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-3xl font-bold mb-2">Smart Navigation</h2>
-                <p className="text-emerald-100 text-lg">AI-powered route optimization</p>
+                <h2 className="text-2xl font-bold mb-1">Smart Navigation</h2>
+                <p className="text-emerald-100 text-base">AI-powered route optimization</p>
               </div>
               <button
                 onClick={() => setIsARMode(!isARMode)}

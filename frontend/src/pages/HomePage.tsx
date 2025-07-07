@@ -9,14 +9,11 @@ import {
   Palette,
   Clock,
   MapPin,
-  Bell,
   TrendingUp,
   Users,
   Zap,
   ArrowRight,
   Star,
-  Wifi,
-  Battery,
   Sparkles,
   Target,
   Shield,
@@ -144,9 +141,9 @@ export const HomePage: React.FC = () => {
     <div className="pt-28 px-6 pb-8 min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20">
       
       {/* Enhanced Hero Section */}
-      <div className="mb-8 mt-6">
+      <div className="mb-4 mt-2">
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className="relative overflow-hidden rounded-2xl"
           style={{
             background: "linear-gradient(135deg, #3b4371 0%, #232946 100%)"
           }}
@@ -160,8 +157,8 @@ export const HomePage: React.FC = () => {
           {/* You can add/remove bubbles as you like */}
 
           {/* Main Content */}
-          <div className="relative z-10 p-8 text-white">
-            <div className="flex items-start justify-between mb-8">
+          <div className="relative z-10 p-4 text-white">
+            <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="relative">
@@ -173,74 +170,74 @@ export const HomePage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-4xl font-bold mb-1">Welcome!</h2>
-                    <p className="text-2xl font-semibold text-gradient-gold">
+                    <h2 className="text-2xl font-bold mb-1">Welcome!</h2>
+                    <p className="text-lg font-semibold text-gradient-gold">
                       <UsernameDisplay />
                     </p>
                   </div>
                 </div>
                 
-                <div className="space-y-2 mb-6">
-                  <p className="text-blue-100 text-lg font-medium flex items-center space-x-2">
+                <div className="space-y-1 mb-3">
+                  <p className="text-blue-100 text-base font-medium flex items-center space-x-2">
                     <Brain className="w-5 h-5" />
                     <span>Your AI travel assistant is ready</span>
                   </p>
-                  <p className="text-blue-200 text-sm">Next flight in 2h 15m • Everything is on track</p>
+                  <p className="text-blue-200 text-xs">Next flight in 2h 15m • Everything is on track</p>
                 </div>
               </div>
               
               <div className="text-right">
-                <div className="glass-dark rounded-2xl p-4">
-                  <div className="text-sm text-blue-200 mb-1">Flight Status</div>
-                  <div className="text-2xl font-bold mb-2">UA123</div>
+                <div className="glass-dark rounded-2xl p-2">
+                  <div className="text-xs text-blue-200 mb-1">Flight Status</div>
+                  <div className="text-lg font-bold mb-1">UA123</div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-green-300 font-medium">On Time</span>
+                    <span className="text-xs text-green-300 font-medium">On Time</span>
                   </div>
                 </div>
               </div>
             </div>
             
             {/* Static Info Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="glass-dark rounded-2xl p-5">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-white" />
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="glass-dark rounded-xl p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-7 h-7 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-blue-100">Current Location</div>
-                    <div className="text-xs text-blue-300">Live tracking</div>
+                    <div className="text-xs font-medium text-blue-100">Current Location</div>
+                    <div className="text-[10px] text-blue-300">Live tracking</div>
                   </div>
                 </div>
-                <div className="text-xl font-bold mb-1">Terminal 3, Level 2</div>
-                <div className="text-sm text-blue-200">Security Checkpoint A</div>
-                <div className="mt-3 flex items-center space-x-2">
-                  <Compass className="w-4 h-4 text-accent-400" />
-                  <span className="text-xs text-accent-300 font-medium">Optimal path calculated</span>
+                <div className="text-base font-bold mb-1">Terminal 3, Level 2</div>
+                <div className="text-xs text-blue-200">Security Checkpoint A</div>
+                <div className="mt-2 flex items-center space-x-2">
+                  <Compass className="w-3 h-3 text-accent-400" />
+                  <span className="text-[10px] text-accent-300 font-medium">Optimal path calculated</span>
                 </div>
               </div>
               
-              <div className="glass-dark rounded-2xl p-5">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-violet-500 rounded-xl flex items-center justify-center">
-                    <Plane className="w-5 h-5 text-white" />
+              <div className="glass-dark rounded-xl p-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-7 h-7 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg flex items-center justify-center">
+                    <Plane className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-blue-100">Departure Gate</div>
-                    <div className="text-xs text-blue-300">8 min walk</div>
+                    <div className="text-xs font-medium text-blue-100">Departure Gate</div>
+                    <div className="text-[10px] text-blue-300">8 min walk</div>
                   </div>
                 </div>
-                <div className="text-xl font-bold mb-1">Gate B12</div>
-                <div className="text-sm text-blue-200">Boarding starts 14:00</div>
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-blue-300 mb-1">
+                <div className="text-base font-bold mb-1">Gate B12</div>
+                <div className="text-xs text-blue-200">Boarding starts 14:00</div>
+                <div className="mt-2">
+                  <div className="flex items-center justify-between text-[10px] text-blue-300 mb-1">
                     <span>Walking progress</span>
                     <span>{Math.round(flightProgress)}%</span>
                   </div>
-                  <div className="w-full bg-white/20 rounded-full h-1.5">
+                  <div className="w-full bg-white/20 rounded-full h-1">
                     <div 
-                      className="h-1.5 rounded-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all duration-300"
+                      className="h-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all duration-300"
                       style={{ width: `${flightProgress}%` }}
                     ></div>
                   </div>
@@ -249,19 +246,19 @@ export const HomePage: React.FC = () => {
             </div>
             
             {/* AI Insights */}
-            <div className="glass-dark rounded-2xl p-5">
-              <div className="flex items-center space-x-2 mb-4">
-                <Brain className="w-5 h-5 text-accent-400" />
-                <span className="text-sm font-semibold text-blue-100">AI Travel Insights</span>
-                <div className="px-2 py-1 bg-accent-400/20 text-accent-300 text-xs font-bold rounded-full">LIVE</div>
+            <div className="glass-dark rounded-xl p-3">
+              <div className="flex items-center space-x-2 mb-2">
+                <Brain className="w-4 h-4 text-accent-400" />
+                <span className="text-xs font-semibold text-blue-100">AI Travel Insights</span>
+                <div className="px-2 py-0.5 bg-accent-400/20 text-accent-300 text-[10px] font-bold rounded-full">LIVE</div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {aiInsights.map((insight, index) => (
                   <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-blue-200">{insight.text}</span>
+                    <span className="text-xs text-blue-200">{insight.text}</span>
                     <div className="flex items-center space-x-1">
                       <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                      <span className="text-xs text-green-300 font-medium">{insight.confidence}%</span>
+                      <span className="text-[10px] text-green-300 font-bold">{insight.confidence}%</span>
                     </div>
                   </div>
                 ))}
@@ -273,49 +270,48 @@ export const HomePage: React.FC = () => {
 
       {/* Live Alerts */}
       {alerts.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-neutral-800">Live Updates</h3>
-            <div className="flex items-center space-x-1 text-sm text-neutral-500">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-bold text-neutral-800">Live Updates</h3>
+            <div className="flex items-center space-x-1 text-xs text-neutral-500">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span>Real-time</span>
             </div>
           </div>
-          
-          <div className="space-y-3">
+          <div className="space-y-2">
             {alerts.map((alert, index) => {
               const Icon = alert.icon;
               return (
                 <div
                   key={index}
-                  className={`relative overflow-hidden rounded-2xl p-5 border transition-all duration-300 hover:scale-[1.02] card-hover ${
+                  className={`relative overflow-hidden rounded-xl p-3 border transition-all duration-300 hover:scale-[1.02] card-hover ${
                     alert.type === 'warning' 
                       ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
                       : 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
                   }`}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-                  <div className="flex items-start space-x-4 relative z-10">
-                    <div className={`p-3 rounded-xl ${
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
+                  <div className="flex items-start space-x-3 relative z-10">
+                    <div className={`p-2 rounded-lg ${
                       alert.type === 'warning' 
                         ? 'bg-gradient-to-br from-amber-400 to-orange-500' 
                         : 'bg-gradient-to-br from-emerald-400 to-green-500'
                     } shadow-lg`}>
-                      <Icon className="w-5 h-5 text-white" />
+                      <Icon className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-bold text-neutral-800">{alert.title}</h4>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className="font-bold text-neutral-800 text-sm">{alert.title}</h4>
                         <div className="flex items-center space-x-2">
                           {alert.priority === 'high' && (
-                            <div className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                            <div className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-semibold rounded-full">
                               HIGH
                             </div>
                           )}
-                          <span className="text-xs text-neutral-500">{alert.time}</span>
+                          <span className="text-[10px] text-neutral-500">{alert.time}</span>
                         </div>
                       </div>
-                      <p className="text-neutral-600 font-medium">{alert.message}</p>
+                      <p className="text-xs text-neutral-600 font-medium">{alert.message}</p>
                     </div>
                   </div>
                 </div>
@@ -326,16 +322,15 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* Features Grid */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-neutral-800">Smart Services</h3>
-          <div className="flex items-center space-x-1 text-sm text-neutral-500">
-            <Zap className="w-4 h-4" />
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-neutral-800">Smart Services</h3>
+          <div className="flex items-center space-x-1 text-xs text-neutral-500">
+            <Zap className="w-3 h-3" />
             <span>AI-Powered</span>
           </div>
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
@@ -344,17 +339,16 @@ export const HomePage: React.FC = () => {
                 to={feature.link}
                 className="group relative"
               >
-                <div className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-glass border border-white/20 transition-all duration-500 hover:shadow-glow card-hover">
+                <div className="relative overflow-hidden bg-white rounded-2xl p-3 shadow-glass border border-white/20 transition-all duration-500 hover:shadow-glow card-hover">
                   <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent"></div>
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-12 translate-x-12"></div>
-                  
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-2xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-6 h-6 text-white" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-2 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className={`px-2 py-1 text-xs font-bold rounded-full ${
+                        <div className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
                           feature.badge === 'AI' ? 'bg-purple-100 text-purple-700' :
                           feature.badge === 'LIVE' ? 'bg-green-100 text-green-700' :
                           feature.badge === 'NEW' ? 'bg-blue-100 text-blue-700' :
@@ -364,22 +358,22 @@ export const HomePage: React.FC = () => {
                         }`}>
                           {feature.badge}
                         </div>
-                        <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-1 transition-all duration-300" />
+                        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-1 transition-all duration-300" />
                       </div>
                     </div>
                     
-                    <h4 className="font-bold text-neutral-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
+                    <h4 className="font-bold text-neutral-800 mb-1 text-sm group-hover:text-primary-600 transition-colors duration-300">
                       {feature.title}
                     </h4>
-                    <p className="text-sm text-neutral-600 mb-4 leading-relaxed">
+                    <p className="text-xs text-neutral-600 mb-2 leading-relaxed">
                       {feature.description}
                     </p>
                     
                     <div className="flex items-center justify-between">
-                      <div className="text-xs font-semibold text-neutral-500">
+                      <div className="text-[10px] font-semibold text-neutral-500">
                         {feature.stats}
                       </div>
-                      <div className={`flex items-center space-x-1 text-xs font-semibold ${
+                      <div className={`flex items-center space-x-1 text-[10px] font-semibold ${
                         feature.trend === 'new' ? 'text-purple-600' : 'text-green-600'
                       }`}>
                         {feature.trend !== 'new' && feature.trend !== 'optimal' && (
@@ -398,28 +392,27 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Enhanced Airport Analytics */}
-      <div className="bg-white rounded-3xl p-6 shadow-glass border border-white/20">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-neutral-800">Airport Pulse</h3>
-          <div className="flex items-center space-x-1 text-sm text-neutral-500">
+      <div className="bg-white rounded-2xl p-3 shadow-glass border border-white/20">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-neutral-800">Airport Pulse</h3>
+          <div className="flex items-center space-x-1 text-xs text-neutral-500">
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
             <span>Live Analytics</span>
           </div>
         </div>
-        
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {quickStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div key={index} className="relative overflow-hidden text-center p-5 rounded-2xl bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
+              <div key={index} className="relative overflow-hidden text-center p-3 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200">
+                <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-4 translate-x-4"></div>
                 <div className="relative z-10">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Icon className="w-5 h-5 text-white" />
+                  <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Icon className="w-4 h-4 text-white" />
                   </div>
-                  <div className="text-2xl font-bold text-neutral-800 mb-1">{stat.value}</div>
-                  <div className="text-sm text-neutral-600 mb-2">{stat.label}</div>
-                  <div className={`text-xs font-semibold flex items-center justify-center space-x-1 ${
+                  <div className="text-base font-bold text-neutral-800 mb-0.5">{stat.value}</div>
+                  <div className="text-xs text-neutral-600 mb-1">{stat.label}</div>
+                  <div className={`text-[10px] font-semibold flex items-center justify-center space-x-1 ${
                     stat.positive ? 'text-green-600' : 'text-red-600'
                   }`}>
                     <TrendingUp className={`w-3 h-3 ${!stat.positive && 'rotate-180'}`} />

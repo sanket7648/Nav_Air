@@ -131,36 +131,33 @@ export const ArtGuidePage: React.FC = () => {
   };
 
   return (
-    // Change pt-32 to pt-24 for a more standard navbar height (adjust as needed)
-    <div className="pt-36 px-4 pb-8">
+    <div className="pt-32 px-2 pb-4 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Art & Culture Guide</h2>
-        <p className="text-gray-600">Discover the artistic treasures of SFO</p>
+      <div className="mb-3">
+        <h2 className="text-xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
+        <p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>
       </div>
-
       {/* Search */}
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
             placeholder="Search artworks or artists..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
         </div>
       </div>
-
       {/* Filters */}
-      <div className="mb-6">
-        <div className="flex space-x-2 overflow-x-auto pb-2">
+      <div className="mb-3">
+        <div className="flex space-x-1 overflow-x-auto pb-1">
           {filters.map((filter) => (
             <button
               key={filter.key}
               onClick={() => setSelectedFilter(filter.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 selectedFilter === filter.key
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -171,9 +168,8 @@ export const ArtGuidePage: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Artworks Grid */}
-      <div className="grid grid-cols-2 gap-4 auto-rows-[200px]">
+      <div className="grid grid-cols-2 gap-2 auto-rows-[120px]">
         {filteredArtworks.map((artwork, index) => (
           <div
             key={artwork.id}
@@ -186,20 +182,17 @@ export const ArtGuidePage: React.FC = () => {
                 alt={artwork.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              
               {/* Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
               {/* AR Badge */}
               {artwork.hasAR && (
-                <div className="absolute top-3 right-3">
-                  <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-medium">
-                    <Smartphone className="w-3 h-3 inline mr-1" />
+                <div className="absolute top-2 right-2">
+                  <div className="bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
+                    <Smartphone className="w-3 h-3 inline mr-0.5" />
                     AR
                   </div>
                 </div>
               )}
-              
               {/* Content */}
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <div className="flex items-start justify-between">

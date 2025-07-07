@@ -103,19 +103,19 @@ export const EmergencyAssistancePage: React.FC = () => {
   return (
     <div className="pt-36 px-4 pb-8">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Emergency Assistance</h2>
-        <p className="text-gray-600">Quick access to help when you need it</p>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Emergency Assistance</h2>
+        <p className="text-gray-600 text-base">Quick access to help when you need it</p>
       </div>
 
       {/* SOS Button */}
-      <div className="mb-8">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-6 text-white">
+      <div className="mb-5">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-3 text-white">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-4">Emergency SOS</h3>
+            <h3 className="text-base font-semibold mb-2">Emergency SOS</h3>
             <button
               onClick={handleSOSPress}
-              className={`w-32 h-32 rounded-full font-bold text-2xl transition-all transform ${
+              className={`w-24 h-24 rounded-full font-bold text-lg transition-all transform ${
                 emergencyContacted === 'sos'
                   ? 'bg-red-800 scale-95'
                   : 'bg-red-500 hover:bg-red-400 hover:scale-105 active:scale-95'
@@ -123,17 +123,17 @@ export const EmergencyAssistancePage: React.FC = () => {
             >
               {emergencyContacted === 'sos' ? (
                 <div className="flex flex-col items-center">
-                  <Clock className="w-8 h-8 mb-1 animate-pulse" />
-                  <span className="text-sm">Calling...</span>
+                  <Clock className="w-6 h-6 mb-1 animate-pulse" />
+                  <span className="text-xs">Calling...</span>
                 </div>
               ) : (
                 <>
-                  <AlertTriangle className="w-8 h-8 mb-2 mx-auto" />
+                  <AlertTriangle className="w-6 h-6 mb-1 mx-auto" />
                   SOS
                 </>
               )}
             </button>
-            <p className="text-sm text-red-100 mt-4">
+            <p className="text-xs text-red-100 mt-2">
               Press and hold to call 911
             </p>
           </div>
@@ -141,23 +141,23 @@ export const EmergencyAssistancePage: React.FC = () => {
       </div>
 
       {/* Location Sharing */}
-      <div className="mb-6">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+      <div className="mb-4">
+        <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-green-600" />
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
+                <MapPin className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Location Sharing</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="font-medium text-gray-900 text-sm">Location Sharing</h4>
+                <p className="text-xs text-gray-600">
                   {isLocationShared ? 'Location is being shared' : 'Share location with emergency services'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsLocationShared(!isLocationShared)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                 isLocationShared
                   ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -170,9 +170,9 @@ export const EmergencyAssistancePage: React.FC = () => {
       </div>
 
       {/* Emergency Contacts */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contacts</h3>
-        <div className="grid grid-cols-1 gap-3">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-gray-900 mb-2">Emergency Contacts</h3>
+        <div className="grid grid-cols-1 gap-2">
           {emergencyContacts.map((contact) => {
             const Icon = contact.icon;
             const isActive = emergencyContacted === contact.id;
@@ -181,23 +181,23 @@ export const EmergencyAssistancePage: React.FC = () => {
               <button
                 key={contact.id}
                 onClick={() => handleEmergencyCall(contact)}
-                className={`p-4 rounded-xl text-left transition-all transform ${
+                className={`p-2.5 rounded-xl text-left transition-all transform ${
                   isActive
                     ? `${contact.color} scale-95`
                     : `bg-white border border-gray-200 hover:shadow-md hover:scale-105 active:scale-95`
                 }`}
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                <div className="flex items-center space-x-2.5">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     isActive ? 'bg-white/20' : `${contact.color}`
                   }`}>
-                    <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-white'}`} />
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white'}`} />
                   </div>
                   <div className="flex-1">
-                    <h4 className={`font-semibold ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                    <h4 className={`font-semibold ${isActive ? 'text-white' : 'text-gray-900'} text-sm`}>
                       {contact.title}
                     </h4>
-                    <p className={`text-sm ${isActive ? 'text-white/80' : 'text-gray-600'}`}>
+                    <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-600'}`}>
                       {contact.description}
                     </p>
                     {isActive && (
@@ -207,7 +207,7 @@ export const EmergencyAssistancePage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <Phone className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                  <Phone className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 </div>
               </button>
             );
@@ -216,9 +216,9 @@ export const EmergencyAssistancePage: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 gap-3">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-gray-900 mb-2">Quick Actions</h3>
+        <div className="grid grid-cols-1 gap-2">
           {quickActions.map((action) => {
             const Icon = action.icon;
             
@@ -226,15 +226,15 @@ export const EmergencyAssistancePage: React.FC = () => {
               <button
                 key={action.id}
                 onClick={action.action}
-                className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all transform hover:scale-105 active:scale-95"
+                className="p-2.5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all transform hover:scale-105 active:scale-95"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-blue-600" />
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-medium text-gray-900">{action.title}</h4>
-                    <p className="text-sm text-gray-600">{action.description}</p>
+                    <h4 className="font-medium text-gray-900 text-sm">{action.title}</h4>
+                    <p className="text-xs text-gray-600">{action.description}</p>
                   </div>
                 </div>
               </button>
@@ -244,9 +244,9 @@ export const EmergencyAssistancePage: React.FC = () => {
       </div>
 
       {/* Safety Information */}
-      <div className="bg-blue-50 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-3">Safety Information</h3>
-        <div className="space-y-2 text-sm text-blue-800">
+      <div className="bg-blue-50 rounded-2xl p-3">
+        <h3 className="text-base font-semibold text-blue-900 mb-2">Safety Information</h3>
+        <div className="space-y-1 text-xs text-blue-800">
           <p>• Emergency exits are located throughout the terminal</p>
           <p>• Assembly points are marked with green signs</p>
           <p>• AED devices are available at information desks</p>
