@@ -267,22 +267,14 @@ router.get('/google/callback', async (req, res) => {
     const { sub: google_id, email, name } = payload;
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 1. Check if the user already exists (case-insensitive)
-    const { rows } = await query(
-      'SELECT * FROM users WHERE LOWER(email) = $1',
-      [normalizedEmail]
-    );
+    // 2. Check if the user already exists in your database
+    const userRows = await query('SELECT * FROM users WHERE email = $1', [email]);
 
     let user;
 
-    if (rows.length > 0) {
-      // User exists
-      user = rows[0];
-      // Optionally update google_id if not set
-      if (!user.google_id) {
-        await query('UPDATE users SET google_id = $1 WHERE id = $2', [google_id, user.id]);
-        user.google_id = google_id;
-      }
+    if (userRows && userRows.length > 0) { // Check if userRows is not null/undefined first
+      // 3. If USER EXISTS, use their data.
+      user = userRows[0];
       console.log(`User found: ${user.email}. Logging in.`);
     } else {
       // User does not exist, create new
@@ -311,21 +303,21 @@ router.get('/google/callback', async (req, res) => {
 // Get current user
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const result = await query(
+    const userRows = await query(
       'SELECT id, email, username, contact_number, country, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
-    if (result.rows.length === 0) {
+    if (!userRows || userRows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-
+    const userDetails = userRows[0];
     res.json({
       success: true,
-      user: result.rows[0]
+      user: userDetails
     });
 
   } catch (error) {
