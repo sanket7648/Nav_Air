@@ -1,5 +1,6 @@
 import express from 'express';
 import { query } from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -45,7 +46,7 @@ function simulateStatusTimestamps() {
 }
 
 // POST /baggage - Create new baggage
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { bagId, flightNumber, carouselNumber } = req.body;
     const newBagId = bagId || Math.random().toString(36).substring(2, 12).toUpperCase();
@@ -61,14 +62,14 @@ router.post('/', async (req, res) => {
 });
 
 // PATCH /baggage/:bagId/status - Update baggage status
-router.patch('/:bagId/status', async (req, res) => {
+router.patch('/:bagId/status', authenticateToken, async (req, res) => {
   try {
     const { bagId } = req.params;
     const { status } = req.body;
     if (!STATUS_EVENTS.includes(status)) return res.status(400).json({ message: 'Invalid status' });
     const result = await query('SELECT * FROM baggage WHERE bag_id = $1', [bagId]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Baggage not found' });
-    const baggage = result.rows[0];
+    if (result.length === 0) return res.status(404).json({ message: 'Baggage not found' });
+    const baggage = result[0];
     const timestamps = baggage.timestamps;
     timestamps[status] = Date.now();
     await query('UPDATE baggage SET timestamps = $1 WHERE bag_id = $2', [JSON.stringify(timestamps), bagId]);
@@ -79,12 +80,12 @@ router.patch('/:bagId/status', async (req, res) => {
 });
 
 // GET /baggage/:bagId - Get baggage status
-router.get('/:bagId', async (req, res) => {
+router.get('/:bagId', authenticateToken, async (req, res) => {
   try {
     const { bagId } = req.params;
     const result = await query('SELECT * FROM baggage WHERE bag_id = $1', [bagId]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Baggage not found' });
-    const baggage = result.rows[0];
+    if (result.length === 0) return res.status(404).json({ message: 'Baggage not found' });
+    const baggage = result[0];
     const progression = getStatusProgression(baggage.timestamps);
     res.json({
       bagId: baggage.bag_id,
@@ -99,10 +100,10 @@ router.get('/:bagId', async (req, res) => {
 });
 
 // GET /baggage - List all baggage
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await query('SELECT * FROM baggage');
-    const baggages = result.rows.map(baggage => {
+    const baggages = result.map(baggage => {
       const progression = getStatusProgression(baggage.timestamps);
       return {
         bagId: baggage.bag_id,
@@ -119,7 +120,7 @@ router.get('/', async (req, res) => {
 });
 
 // DELETE /baggage/:bagId - Delete baggage
-router.delete('/:bagId', async (req, res) => {
+router.delete('/:bagId', authenticateToken, async (req, res) => {
   try {
     const { bagId } = req.params;
     await query('DELETE FROM baggage WHERE bag_id = $1', [bagId]);
@@ -129,4 +130,4 @@ router.delete('/:bagId', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

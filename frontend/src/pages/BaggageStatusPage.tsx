@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Package, 
-  CheckCircle, 
-  Truck, 
-  MapPin, 
+import {
+  Package,
+  CheckCircle,
+  Truck,
+  MapPin,
   Search,
   Clock,
   AlertTriangle,
@@ -119,7 +119,7 @@ export const BaggageStatusPage: React.FC = () => {
     setCreateError('');
     setCreateSuccess(false);
     try {
-      const data = await baggageAPI.create({
+      await baggageAPI.create({
         bagId: createForm.bagId || undefined,
         flightNumber: createForm.flightNumber,
         carouselNumber: Number(createForm.carouselNumber),
@@ -149,7 +149,7 @@ export const BaggageStatusPage: React.FC = () => {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-amber-600 to-yellow-600 p-4 text-white">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-amber-600/20 to-yellow-600/20"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-32 translate-x-32"></div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -168,7 +168,7 @@ export const BaggageStatusPage: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="glass-dark rounded-2xl p-4">
                 <div className="flex items-center space-x-2 mb-2">
@@ -178,7 +178,7 @@ export const BaggageStatusPage: React.FC = () => {
                 <div className="text-2xl font-bold">{bag ? 1 : 0}</div>
                 <div className="text-sm text-orange-200">Being tracked</div>
               </div>
-              
+
               <div className="glass-dark rounded-2xl p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-accent-400" />
@@ -204,6 +204,13 @@ export const BaggageStatusPage: React.FC = () => {
             className="pl-12 pr-4 py-3 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white shadow-glass text-base font-medium transition-all duration-300 w-full"
             style={{ minWidth: 0 }}
           />
+           <button
+            type="submit"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold shadow-md hover:from-orange-600 hover:to-amber-700 transition-all text-base"
+          >
+            <Search className="w-5 h-5" />
+            Search
+          </button>
         </form>
         <button
           type="button"
@@ -213,16 +220,6 @@ export const BaggageStatusPage: React.FC = () => {
         >
           <Sparkles className="w-5 h-5" />
           Create Record
-        </button>
-        <button
-          type="submit"
-          form="search-form"
-          className="flex-shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold shadow-md hover:from-orange-600 hover:to-amber-700 transition-all text-base"
-          style={{ minWidth: '140px' }}
-          onClick={handleSearch}
-        >
-          <Search className="w-5 h-5" />
-          Search
         </button>
       </div>
 
