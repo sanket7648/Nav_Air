@@ -5,6 +5,8 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import baggageRoutes from './routes/baggage.js';
+import locationRoutes from './routes/location.js';
+import flightsRoutes from './routes/flights.js';
 import db, { query, checkDatabaseHealth, closePool } from './config/database.js';
 import { verifyTransporter } from './services/emailService.js';
 
@@ -50,6 +52,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/baggage', baggageRoutes);
+app.use('/api/location', locationRoutes);
+app.use('/api', flightsRoutes);
 
 app.get('/test-user', async (req, res) => {
   const result = await query(

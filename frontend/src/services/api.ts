@@ -28,6 +28,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
+    // Only redirect to login for actual authentication errors (401)
+    // Don't redirect for other errors like 400 (bad request) or 404 (not found)
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('authToken');
@@ -67,6 +69,12 @@ export const authAPI = {
   // Get current user
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
+    return response.data.user;
+  },
+
+  // Update user profile
+  updateProfile: async (profileData: { city?: string; country?: string }) => {
+    const response = await api.put('/auth/profile', profileData);
     return response.data;
   },
 
@@ -139,6 +147,21 @@ export const baggageAPI = {
     const res = await api.delete(`/baggage/${bagId}`);
     return res.data;
   },
+};
+
+export const sendLocation = async (locationData: any) => {
+  const res = await api.post('/location', locationData);
+  return res.data;
+};
+
+export const queryFlights = async (locationData: any) => {
+  const res = await api.post('/flights', locationData);
+  return res.data;
+};
+
+export const getUserRegionFlights = async () => {
+  const res = await api.get('/user-region-flights');
+  return res.data;
 };
 
 export default api; 

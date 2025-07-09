@@ -19,7 +19,7 @@ const googleClient = new OAuth2Client(
 // Register user
 router.post('/register', validateRegistration, async (req, res) => {
   try {
-    const { email, password, username, contact_number, country } = req.body;
+    const { email, password, username, contact_number, country, city } = req.body;
 
     // Check if user already exists
     const existingUser = await query(
@@ -48,10 +48,10 @@ router.post('/register', validateRegistration, async (req, res) => {
 
     // Insert user into database
     const result = await query(
-      `INSERT INTO users (email, hashed_password, username, contact_number, country, verification_token, verification_expires, otp_code, otp_expires)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO users (email, hashed_password, username, contact_number, country, city, verification_token, verification_expires, otp_code, otp_expires)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, email, username`,
-      [email, hashedPassword, username, contact_number, country, verificationToken, verificationExpires, otp, otpExpires]
+      [email, hashedPassword, username, contact_number, country, city, verificationToken, verificationExpires, otp, otpExpires]
     );
 
     const user = result.rows[0];
@@ -304,7 +304,7 @@ router.get('/google/callback', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const userRows = await query(
-      'SELECT id, email, username, contact_number, country, created_at FROM users WHERE id = $1',
+      'SELECT id, email, username, contact_number, country, city, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -322,6 +322,32 @@ router.get('/me', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Update user profile
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { city, country } = req.body;
+    const userId = req.user.id;
+
+    // Update user profile
+    await query(
+      'UPDATE users SET city = $1, country = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+      [city, country, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

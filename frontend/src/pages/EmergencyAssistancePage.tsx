@@ -103,7 +103,7 @@ export const EmergencyAssistancePage: React.FC = () => {
   return (
     <div className="pt-36 px-6 pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-red-50/30 to-orange-50/20">
       <div className="w-full max-w-5xl mx-auto">
-        {/* Header */}
+      {/* Header */}
         <div className="mb-4">
         <h2 className="text-xl font-bold text-gray-900 mb-1">Emergency Assistance</h2>
         <p className="text-gray-600 text-base">Quick access to help when you need it</p>
@@ -253,7 +253,7 @@ export const EmergencyAssistancePage: React.FC = () => {
           <p>• AED devices are available at information desks</p>
           <p>• Security personnel patrol all areas 24/7</p>
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ async function setupDatabase() {
     
     // Test the connection by querying the users table
     const result = await query('SELECT COUNT(*) FROM users');
-    console.log(`📊 Users table created with ${result.rows[0].count} records`);
+    console.log(`📊 Users table created with ${result[0].count} records`);
     
   } catch (error) {
     console.error('❌ Error setting up database:', error.message);

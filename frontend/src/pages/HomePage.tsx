@@ -140,7 +140,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="pt-36 px-6 pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20">
       <div className="w-full max-w-5xl mx-auto">
-        {/* Enhanced Hero Section */}
+      {/* Enhanced Hero Section */}
         <div className="mb-4 mt-2">
         <div
           className="relative overflow-hidden rounded-2xl"
@@ -423,7 +423,7 @@ export const HomePage: React.FC = () => {
             );
           })}
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

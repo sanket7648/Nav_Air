@@ -13,7 +13,12 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     otp_code VARCHAR(10),
-    otp_expires TIMESTAMP
+    otp_expires TIMESTAMP,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    accuracy DOUBLE PRECISION,
+    location_method VARCHAR(20),
+    city VARCHAR(100)
 );
 
 -- Create index on email for faster lookups
@@ -34,4 +39,20 @@ CREATE TABLE IF NOT EXISTS baggage (
 );
 
 -- Add unique index on LOWER(email)
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email)); 
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email));
+
+-- Create location_analytics table
+CREATE TABLE IF NOT EXISTS location_analytics (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    session_id VARCHAR(64),
+    location_method VARCHAR(20) NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    accuracy DOUBLE PRECISION,
+    country VARCHAR(100),
+    region VARCHAR(100),
+    ip VARCHAR(45),
+    error TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+); 
