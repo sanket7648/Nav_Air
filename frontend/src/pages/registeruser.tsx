@@ -1,31 +1,24 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, User, Phone, Globe, Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
-
-const countries = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. \"Swaziland\")", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Holy See", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-];
+import { useNavigate } from 'react-router-dom';
 
 export const RegisterUser: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ field: string; message: string }[]>([]);
-  const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({
     username: '',
     email: '',
     password: '',
     contact_number: '',
     country: '',
-    city: '', // Add city to form state
+    city: '',
   });
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,173 +28,89 @@ export const RegisterUser: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await authAPI.register(form);
-      // Redirect to OTP verification page with email
-      navigate('/otp-verify', { state: { email: form.email } });
-    } catch (error: any) {
-      // Check for validation errors from backend
-      if (error.response?.data?.errors) {
-        setFieldErrors(error.response.data.errors);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        navigate('/otp-verify', { state: { email: form.email } });
+      } else if (data.errors) {
+        setFieldErrors(data.errors);
       } else {
-        setError(error.response?.data?.message || 'Registration failed. Please try again.');
+        setError(data.message || 'Registration failed. Please try again.');
       }
+    } catch (err) {
+      setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#0a1124] via-[#181f3a] to-[#181f3a] overflow-hidden">
-      <div className="relative w-full max-w-lg mx-auto p-3 rounded-xl shadow-glass bg-white/90 dark:bg-neutral-900/90 border border-white/30 dark:border-neutral-800 backdrop-blur-lg">
-        {/* Decorative Orbs */}
-        <div className="absolute -top-4 -left-4 w-10 h-10 bg-gradient-to-br from-blue-400/30 to-purple-400/10 rounded-full blur pointer-events-none"></div>
-        <div className="absolute -bottom-4 -right-4 w-10 h-10 bg-gradient-to-br from-fuchsia-400/30 to-pink-400/10 rounded-full blur pointer-events-none"></div>
-        
-        {/* Logo & Welcome */}
-        <div className="flex flex-col items-center mb-2 relative z-10">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-fuchsia-500 rounded-lg flex items-center justify-center shadow-glow mb-1">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <h2 className="text-base font-bold text-neutral-900 dark:text-white mb-0.5">Create Account</h2>
-          <p className="text-neutral-500 dark:text-neutral-300 text-[11px]">Register for your NavAir experience</p>
-        </div>
+  const countries = [ "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. 'Swaziland')", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Holy See", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"];
 
-        {/* Error Message */}
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#181f2a] to-[#232946] py-12 px-4 sm:px-6 lg:px-8">
+      {/* Changed max-w-md to max-w-lg to make the card wider */}
+      <div className="w-full max-w-lg p-8 rounded-2xl shadow-2xl bg-[#181f2a] relative transition-all duration-500">
+        {/* Decorative Orbs */}
+        <div className="absolute -top-6 -left-6 w-20 h-20 bg-gradient-to-br from-blue-400/30 to-purple-400/10 rounded-full blur-xl pointer-events-none"></div>
+        <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-gradient-to-br from-fuchsia-400/30 to-pink-400/10 rounded-full blur-xl pointer-events-none"></div>
+        {/* Logo & Welcome */}
+        <div className="flex flex-col items-center mb-6 relative z-10">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-400 flex items-center justify-center mb-2 shadow-lg">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M12 2a1 1 0 0 1 .993.883L13 3v1.07a7.001 7.001 0 0 1 6.928 6.13l.014.2a1 1 0 0 1-1.993.117l-.014-.117A5.001 5.001 0 0 0 13 4.07V5a1 1 0 0 1-1.993.117L11 5V4.07A7.001 7.001 0 0 1 4.072 10.2a1 1 0 0 1-1.993-.117l.014-.2A7.001 7.001 0 0 1 11 4.07V3a1 1 0 0 1 1-1Z"/></svg>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-1">Create Account</h2>
+          <p className="text-gray-400">Register for your NavAir experience</p>
+        </div>
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm relative z-10">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-900/20 border border-red-800 text-red-300 text-sm relative z-10">
             <span>{error}</span>
           </div>
         )}
-
         {fieldErrors.length > 0 && (
-          <ul className="error-list">
-            {fieldErrors.map((err, idx) => (
-              <li key={idx} className="text-red-600 text-xs">
-                {err.field}: {err.message}
-              </li>
-            ))}
-          </ul>
+          <div className="p-3 mb-4 rounded-lg bg-red-900/20 border border-red-800 text-red-300 text-sm relative z-10">
+            <ul className="list-disc list-inside space-y-1">
+              {fieldErrors.map((err, idx) => (
+                <li key={idx}>
+                  <span className="font-semibold capitalize">{err.field.replace('_', ' ')}:</span> {err.message}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
-
-        {/* Register Form */}
-        <form onSubmit={handleSubmit} className="space-y-2 relative z-10">
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="username">
-              Username
-            </label>
-            <div className="relative">
-              <User className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-300 w-3.5 h-3.5" />
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                disabled={isLoading || success}
-                value={form.username}
-                onChange={handleChange}
-                className="w-full pl-7 pr-2 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition disabled:opacity-50"
-                placeholder="Choose a username"
-              />
+        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">Username</label>
+              <input id="username" name="username" type="text" required disabled={isLoading} value={form.username} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Choose a username"/>
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+              <input id="email" name="email" type="email" required disabled={isLoading} value={form.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="you@email.com"/>
             </div>
           </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="email">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-300 w-3.5 h-3.5" />
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                className="w-full pl-7 pr-2 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                placeholder="you@email.com"
-              />
-            </div>
+          <div className="relative">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required disabled={isLoading} value={form.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 pr-16" placeholder="Create a strong password"/>
+            <button type="button" tabIndex={-1} className="absolute right-4 top-9 transform -translate-y-1/2 text-neutral-400 hover:text-blue-500 text-sm font-semibold" onClick={() => setShowPassword((v) => !v)} style={{height: '32px'}}>
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
           </div>
           <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-300 w-3.5 h-3.5" />
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={form.password}
-                onChange={handleChange}
-                className="w-full pl-7 pr-7 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                placeholder="Create a password"
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-300 hover:text-blue-500"
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            <label htmlFor="contact_number" className="block text-sm font-medium text-gray-300 mb-1">Contact Number</label>
+            <input id="contact_number" name="contact_number" type="tel" required disabled={isLoading} value={form.contact_number} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Your contact number"/>
           </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="contact_number">
-              Contact Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-300 w-3.5 h-3.5" />
-              <input
-                id="contact_number"
-                name="contact_number"
-                type="tel"
-                required
-                disabled={isLoading || success}
-                value={form.contact_number}
-                onChange={handleChange}
-                className="w-full pl-7 pr-2 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition disabled:opacity-50"
-                placeholder="Your contact number"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-1">City</label>
+              <input id="city" name="city" type="text" required disabled={isLoading} value={form.city} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your city"/>
             </div>
-          </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="city">
-              City
-            </label>
-            <div className="relative">
-              <input
-                id="city"
-                name="city"
-                type="text"
-                required
-                disabled={isLoading || success}
-                value={form.city}
-                onChange={handleChange}
-                className="w-full pl-7 pr-2 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition disabled:opacity-50"
-                placeholder="Enter your city"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-700 dark:text-neutral-200 mb-0.5" htmlFor="country">
-              Country
-            </label>
-            <div className="relative">
-              <Globe className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-300 w-3.5 h-3.5" />
-              <select
-                id="country"
-                name="country"
-                required
-                disabled={isLoading || success}
-                value={form.country}
-                onChange={handleChange}
-                className="w-full pl-7 pr-2 py-1.5 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none transition disabled:opacity-50"
-              >
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-300 mb-1">Country</label>
+              <select id="country" name="country" required disabled={isLoading} value={form.country} onChange={handleChange} className="w-full px-4 py-2 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
                 <option value="" disabled>Select country</option>
                 {countries.map((country) => (
                   <option key={country} value={country}>{country}</option>
@@ -209,28 +118,16 @@ export const RegisterUser: React.FC = () => {
               </select>
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={isLoading || success}
-            className="w-full py-1.5 rounded bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white font-bold text-sm shadow-md hover:from-blue-600 hover:to-fuchsia-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Creating Account...' : 'Register'}
+          <button type="submit" disabled={isLoading} className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50">
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-
-        {/* Login Link */}
-        <div className="text-center mt-4 relative z-10">
-          <p className="text-neutral-500 dark:text-neutral-400 text-xs">
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-blue-500 hover:text-blue-600 font-medium transition"
-            >
-              Sign in here
-            </Link>
-          </p>
+        <div className="text-center text-gray-400 text-sm mt-6">
+          Already have an account? <span className="text-blue-400 hover:underline cursor-pointer" onClick={() => navigate('/login')}>Sign in here</span>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default RegisterUser;

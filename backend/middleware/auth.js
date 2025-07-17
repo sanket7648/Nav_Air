@@ -23,23 +23,17 @@ export const authenticateToken = async (req, res, next) => {
     }
 
     // Get user from database
-    // Corrected and working code
-
-    // Get user from database
-    const userRows = await query(
+    const userResult = await query(
       'SELECT id, email, username, is_verified FROM users WHERE id = $1',
       [decoded.userId]
     );
-
-    // Safely check if the returned array is empty
-    if (!userRows || userRows.length === 0) { // <--- FIXED LINE
+    if (!userResult || !userResult.rows || userResult.rows.length === 0) {
       return res.status(403).json({
         success: false,
         message: 'User not found'
       });
     }
-
-    const user = userRows[0]; // Get the user from the array directly
+    const user = userResult.rows[0];
 
     // Check if user is verified
     if (!user.is_verified) {
@@ -65,21 +59,17 @@ export const checkUserVerified = async (req, res, next) => {
   const { email } = req.body;
 
   try {
-    // Correctly handle the direct array returned by query()
-    const userRows = await query(
+    const userResult = await query(
       'SELECT id, email, username, is_verified, google_id FROM users WHERE LOWER(email) = $1',
       [email.toLowerCase()]
     );
-
-    // Safely check if the user exists
-    if (!userRows || userRows.length === 0) {
+    if (!userResult || !userResult.rows || userResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-
-    const user = userRows[0]; // Get user from the array
+    const user = userResult.rows[0];
 
     if (!user.is_verified) {
       return res.status(403).json({

@@ -166,7 +166,7 @@ export const BaggageStatusPage: React.FC = () => {
   const currentStepIdx = bag ? STATUS_STEPS.findIndex(step => step.key === bag.currentStatus) : -1;
 
   return (
-    <div className="pt-36 px-6 pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-orange-50/30 to-amber-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
       <div className="w-full max-w-5xl mx-auto">
       {/* Header */}
         <div className="mb-4">

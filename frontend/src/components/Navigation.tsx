@@ -101,7 +101,7 @@ export const Navigation: React.FC = () => {
                 <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gray-100">
                   <User className="w-4 h-4 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">
-                    {user?.username || 'User'}
+                    {user?.username || user?.name || user?.email || 'User'}
                   </span>
                 </div>
                 <button
@@ -117,18 +117,18 @@ export const Navigation: React.FC = () => {
               </>
             ) : (
               <>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white font-semibold shadow hover:from-blue-600 hover:to-fuchsia-600 transition"
-                >
-                  Register
-                </button>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="px-4 py-1.5 rounded-lg bg-white border border-blue-500 text-blue-600 font-semibold shadow hover:bg-blue-50 transition"
-                >
-                  Sign In
-                </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white font-semibold shadow hover:from-blue-600 hover:to-fuchsia-600 transition"
+            >
+              Register
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-1.5 rounded-lg bg-white border border-blue-500 text-blue-600 font-semibold shadow hover:bg-blue-50 transition"
+            >
+              Sign In
+            </button>
               </>
             )}
           </div>

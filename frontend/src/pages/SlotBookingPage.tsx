@@ -108,7 +108,7 @@ export const SlotBookingPage: React.FC = () => {
   const selectedServiceData = services.find(s => s.id === selectedService);
 
   return (
-    <div className="pt-32 px-2 pb-4 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
       {/* Header */}
       <div className="mb-3">
         <h2 className="text-xl font-bold text-gray-900 mb-0.5">Slot Booking</h2>

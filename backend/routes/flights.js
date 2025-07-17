@@ -2,9 +2,10 @@ import express from 'express';
 import axios from 'axios';
 import { query } from '../config/database.js';
 import jwt from 'jsonwebtoken';
+import { scrapeBLRArrivals, scrapeBLRDepartures } from '../services/flightScraper.js';
 const router = express.Router();
 
-const AVIATIONSTACK_KEY = process.env.AVIATIONSTACK_KEY;
+const AVIATIONSTACK_KEY = process.env.FLIGHTAPI_KEY;
 
 // In-memory cache for flights
 let cachedFlights = null;
@@ -112,70 +113,115 @@ router.get('/user-region-flights', async (req, res) => {
       }
     }
 
+    // Define airportIata after nearestAirport is determined
+    const airportIata = nearestAirport?.iataCode?.toUpperCase();
+
     // Fetch/cached flights
     const now = Date.now();
     if (!cachedFlights || (now - cacheTimestamp >= CACHE_DURATION_MS)) {
-      const url = `http://api.aviationstack.com/v1/flights?access_key=${AVIATIONSTACK_KEY}&limit=100`;
-      const response = await axios.get(url);
-      cachedFlights = response.data && response.data.data ? response.data.data : [];
+      let arrivals = [];
+      let departures = [];
+      
+      if (airportIata) {
+        // Try flightapi.io first
+        if (AVIATIONSTACK_KEY) {
+          try {
+            const today = new Date().toISOString().slice(0, 10);
+            const arrUrl = `https://app.flightapi.io/arrivals/${AVIATIONSTACK_KEY}/${airportIata}/${today}`;
+            const depUrl = `https://app.flightapi.io/departures/${AVIATIONSTACK_KEY}/${airportIata}/${today}`;
+            const [arrRes, depRes] = await Promise.all([
+              axios.get(arrUrl),
+              axios.get(depUrl)
+            ]);
+            arrivals = arrRes.data || [];
+            departures = depRes.data || [];
+            console.log(`Successfully fetched ${arrivals.length} arrivals and ${departures.length} departures from flightapi.io`);
+          } catch (apiErr) {
+            console.error('flightapi.io fetch error:', apiErr.message);
+            console.log('Falling back to web scraping...');
+            
+            // Fallback to web scraping for supported airports
+            if (airportIata === 'BLR') {
+              try {
+                const [scrapedArrivals, scrapedDepartures] = await Promise.all([
+                  scrapeBLRArrivals(),
+                  scrapeBLRDepartures()
+                ]);
+                arrivals = scrapedArrivals;
+                departures = scrapedDepartures;
+                console.log(`Successfully scraped ${arrivals.length} arrivals and ${departures.length} departures from BLR website`);
+              } catch (scrapeErr) {
+                console.error('Web scraping failed:', scrapeErr.message);
+              }
+            } else {
+              console.log(`Web scraping not available for airport ${airportIata}. Only BLR is currently supported.`);
+            }
+          }
+        } else {
+          console.log('No FLIGHTAPI_KEY provided, using web scraping fallback');
+          // No API key, try web scraping directly
+          if (airportIata === 'BLR') {
+            try {
+              const [scrapedArrivals, scrapedDepartures] = await Promise.all([
+                scrapeBLRArrivals(),
+                scrapeBLRDepartures()
+              ]);
+              arrivals = scrapedArrivals;
+              departures = scrapedDepartures;
+              console.log(`Successfully scraped ${arrivals.length} arrivals and ${departures.length} departures from BLR website`);
+            } catch (scrapeErr) {
+              console.error('Web scraping failed:', scrapeErr.message);
+            }
+          }
+        }
+      }
+      
+      cachedFlights = [...arrivals, ...departures];
       cacheTimestamp = now;
     }
     // Filter flights by user city/country and only today's flights
-    const today = new Date().toISOString().slice(0, 10);
-    const airportIata = nearestAirport?.iataCode?.toUpperCase();
-    let relevantFlights;
-
+    // flightapi.io returns flights with different structure, so adapt mapping
+    let relevantFlights = [];
     if (airportIata) {
       relevantFlights = cachedFlights.filter(f => {
-        const flightDate = f.flight_date || '';
-        const depIata = (f.departure?.iata || '').toUpperCase();
-        const arrIata = (f.arrival?.iata || '').toUpperCase();
-        return (
-          flightDate === today &&
-          (depIata === airportIata || arrIata === airportIata)
-        );
+        // For arrivals: f.arrival_airport_iata === airportIata
+        // For departures: f.departure_airport_iata === airportIata
+        const depIata = (f.departure_airport_iata || '').toUpperCase();
+        const arrIata = (f.arrival_airport_iata || '').toUpperCase();
+        return depIata === airportIata || arrIata === airportIata;
       });
-    } else {
-      // Fallback: show first 10 flights for today, or show a user-friendly error
-      relevantFlights = cachedFlights.filter(f => f.flight_date === today).slice(0, 10);
     }
-    
     // If we have location data, filter by region
     if (userCity || userCountry) {
       relevantFlights = relevantFlights.filter(f => {
-        const depCity = f.departure?.city?.toLowerCase() || '';
-        const arrCity = f.arrival?.city?.toLowerCase() || '';
-        const depCountry = f.departure?.country?.toLowerCase() || '';
-        const arrCountry = f.arrival?.country?.toLowerCase() || '';
-        
+        const depCity = f.departure_airport_city?.toLowerCase() || '';
+        const arrCity = f.arrival_airport_city?.toLowerCase() || '';
+        const depCountry = f.departure_airport_country?.toLowerCase() || '';
+        const arrCountry = f.arrival_airport_country?.toLowerCase() || '';
         return (
           (userCity && (depCity.includes(userCity) || arrCity.includes(userCity))) ||
           (userCountry && (depCountry.includes(userCountry) || arrCountry.includes(userCountry)))
         );
       });
     }
-    
     // If no location data or no regional flights found, show some general flights
     if (relevantFlights.length === 0) {
-      relevantFlights = cachedFlights.filter(f => {
-        const flightDate = f.flight_date || '';
-        return flightDate === today;
-      }).slice(0, 10); // Show first 10 flights of the day
+      relevantFlights = cachedFlights.slice(0, 10); // Show first 10 flights
     }
-    // Format response
+    // Format response for frontend
     const formatted = relevantFlights.map(f => ({
-      flight_number: f.flight?.iata || f.flight?.number || '',
-      airline: f.airline?.name || '',
-      departure_city: f.departure?.city || '',
-      departure_airport: f.departure?.airport || '',
-      departure_iata: f.departure?.iata || '',
-      arrival_city: f.arrival?.city || '',
-      arrival_airport: f.arrival?.airport || '',
-      arrival_iata: f.arrival?.iata || '',
-      departure_time: f.departure?.scheduled || '',
-      arrival_time: f.arrival?.scheduled || '',
-      terminal: f.departure?.terminal || f.arrival?.terminal || '',
-      status: f.flight_status || ''
+      flight_number: f.flight_iata || f.flight_number || '',
+      airline: f.airline_name || f.airline || '',
+      departure_city: f.departure_airport_city || '',
+      departure_airport: f.departure_airport_name || '',
+      departure_iata: f.departure_airport_iata || '',
+      arrival_city: f.arrival_airport_city || '',
+      arrival_airport: f.arrival_airport_name || '',
+      arrival_iata: f.arrival_airport_iata || '',
+      departure_time: f.departure_scheduled_time_utc || f.departure_time_utc || '',
+      arrival_time: f.arrival_scheduled_time_utc || f.arrival_time_utc || '',
+      terminal: f.departure_terminal || f.arrival_terminal || '',
+      status: f.status || ''
     }));
     // Determine response message based on location availability
     let message = '';
@@ -198,6 +244,54 @@ router.get('/user-region-flights', async (req, res) => {
     };
     
     if (!relevantFlights || relevantFlights.length === 0) {
+      // If nearest airport is BLR, try scraping as fallback
+      if (airportIata === 'BLR') {
+        const [arrivals, departures] = await Promise.all([
+          scrapeBLRArrivals(),
+          scrapeBLRDepartures()
+        ]);
+        const scrapedFlights = [
+          ...arrivals.map(f => ({
+            flight_number: f.flightNumber,
+            airline: f.airline,
+            departure_city: f.origin || '',
+            departure_airport: '',
+            departure_iata: '',
+            arrival_city: 'Bengaluru',
+            arrival_airport: 'Kempegowda International Airport',
+            arrival_iata: 'BLR',
+            departure_time: f.scheduledTime,
+            arrival_time: '',
+            terminal: '',
+            status: f.status,
+            type: 'arrival'
+          })),
+          ...departures.map(f => ({
+            flight_number: f.flightNumber,
+            airline: f.airline,
+            departure_city: 'Bengaluru',
+            departure_airport: 'Kempegowda International Airport',
+            departure_iata: 'BLR',
+            arrival_city: f.destination || '',
+            arrival_airport: '',
+            arrival_iata: '',
+            departure_time: f.scheduledTime,
+            arrival_time: '',
+            terminal: '',
+            status: f.status,
+            type: 'departure'
+          }))
+        ];
+        if (scrapedFlights.length > 0) {
+          return res.json({
+            flights: scrapedFlights,
+            message: 'Showing real-time flights for Kempegowda International Airport (BLR) from official airport website.',
+            location: 'Bengaluru, India',
+            locationInfo
+          });
+        }
+      }
+      // If not BLR or scraping failed, return original error
       return res.status(404).json({ flights: [], message: 'No flights found for your region or nearest airport.' });
     }
 
@@ -210,6 +304,71 @@ router.get('/user-region-flights', async (req, res) => {
   } catch (err) {
     console.error('User region flights error:', err.message);
     res.status(500).json({ error: 'Failed to fetch or filter flights.' });
+  }
+});
+
+const AVIATIONSTACK_API_KEY = process.env.AVIATIONSTACK_API_KEY; // Put your key in .env
+
+function isValidDate(dateStr) {
+  // Checks for YYYYMMDD format
+  return /^\d{8}$/.test(dateStr);
+}
+
+router.get('/search-flights', async (req, res) => {
+  try {
+    const { from = 'BLR', to = 'ALL', date, direction = 'dep' } = req.query;
+    if (!date || !isValidDate(date)) {
+      return res.status(400).json({ error: 'Date is required in YYYYMMDD format.' });
+    }
+
+    // Format date for AviationStack (YYYY-MM-DD)
+    const formattedDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+
+    // Build AviationStack API URL
+    let url = `http://api.aviationstack.com/v1/flights?access_key=${AVIATIONSTACK_API_KEY}&flight_date=${formattedDate}`;
+    if (direction === 'dep') {
+      if (from && from !== 'ALL') url += `&dep_iata=${from}`;
+      if (to && to !== 'ALL') url += `&arr_iata=${to}`;
+    } else if (direction === 'arr') {
+      if (to && to !== 'ALL') url += `&arr_iata=${to}`;
+      if (from && from !== 'ALL') url += `&dep_iata=${from}`;
+    }
+
+    const response = await axios.get(url);
+    const flights = response.data?.data || [];
+
+    // Map to your frontend format
+    const mapped = flights.map(flight => ({
+      flightNumber: flight.flight?.iata || '',
+      airline: flight.airline?.name || '',
+      airlineImg: '', // AviationStack free tier does not provide logos
+      origin: flight.departure?.airport || '',
+      destination: flight.arrival?.airport || '',
+      scheduledTime: direction === 'dep'
+        ? flight.departure?.scheduled || ''
+        : flight.arrival?.scheduled || '',
+      estimatedTime: direction === 'dep'
+        ? flight.departure?.estimated || ''
+        : flight.arrival?.estimated || '',
+      status: flight.flight_status || '',
+      terminal: direction === 'dep'
+        ? flight.departure?.terminal || ''
+        : flight.arrival?.terminal || '',
+      direction
+    }));
+
+    res.json({ flights: mapped });
+  } catch (err) {
+    if (err.response) {
+      console.error('Flight search error:', {
+        status: err.response.status,
+        data: err.response.data,
+        url: err.config?.url
+      });
+    } else {
+      console.error('Flight search error:', err.message);
+    }
+    res.status(500).json({ error: 'Failed to fetch flights.' });
   }
 });
 

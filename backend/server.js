@@ -53,7 +53,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/baggage', baggageRoutes);
 app.use('/api/location', locationRoutes);
-app.use('/api', flightsRoutes);
+app.use('/api/flights', flightsRoutes);
 
 app.get('/test-user', async (req, res) => {
   const result = await query(

@@ -138,7 +138,7 @@ export const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="pt-36 px-6 pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20">
+    <div className="pt-[120px] sm:pt-[140px] px-2 sm:px-4 md:px-6 pb-8 sm:pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20">
       <div className="w-full max-w-5xl mx-auto">
       {/* Enhanced Hero Section */}
         <div className="mb-4 mt-2">

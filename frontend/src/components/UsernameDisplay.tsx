@@ -7,7 +7,7 @@ const UsernameDisplay: React.FC = () => {
   } catch (e) {
     user = {};
   }
-  const displayName = user?.username || user?.name || user?.fullName || "Anonymous User";
+  const displayName = user?.username || user?.name || user?.fullName || user?.email || "Anonymous User";
   return <span>{displayName}</span>;
 };
 

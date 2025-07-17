@@ -9,8 +9,14 @@ const sql = neon(process.env.DATABASE_URL);
 // Simple query function (mimics pg's pool.query)
 const query = async (text, params = []) => {
   const result = await sql.query(text, params);
-  console.log('Query result:', result);
-  return result;
+  // Ensure compatibility: always return { rows: [...] }
+  if (Array.isArray(result)) {
+    return { rows: result };
+  }
+  if (result && result.rows) {
+    return result;
+  }
+  return { rows: result ? [result] : [] };
 };
 
 // Health check function

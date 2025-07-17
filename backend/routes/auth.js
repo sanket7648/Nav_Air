@@ -6,6 +6,8 @@ import { generateToken, generateVerificationToken, verifyVerificationToken } fro
 import { sendVerificationEmail, generateOTP, sendOtpEmail } from '../services/emailService.js';
 import { authenticateToken, checkUserVerified } from '../middleware/auth.js';
 import { validateRegistration, validateLogin, validateEmailVerification } from '../middleware/validation.js';
+import crypto from 'crypto';
+import { sendResetPasswordEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -272,9 +274,9 @@ router.get('/google/callback', async (req, res) => {
 
     let user;
 
-    if (userRows && userRows.length > 0) { // Check if userRows is not null/undefined first
+    if (userRows && userRows.rows && userRows.rows.length > 0) {
       // 3. If USER EXISTS, use their data.
-      user = userRows[0];
+      user = userRows.rows[0];
       console.log(`User found: ${user.email}. Logging in.`);
     } else {
       // User does not exist, create new
@@ -287,10 +289,14 @@ router.get('/google/callback', async (req, res) => {
     }
 
     // Generate JWT
-    const token = generateToken({ userId: user.id });
+    const token = generateToken({
+      userId: user.id,
+      username: user.username,
+      email: user.email
+    });
 
     // Redirect or respond as needed
-    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${token}&success=true`;
+    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${token}&username=${encodeURIComponent(user.username)}&email=${encodeURIComponent(user.email)}&success=true`;
     res.redirect(redirectUrl);
 
   } catch (error) {
@@ -300,26 +306,68 @@ router.get('/google/callback', async (req, res) => {
   }
 });
 
+// Forgot Password Route
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email is required' });
+  try {
+    const userResult = await query('SELECT * FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      // For security, don't reveal if user exists
+      return res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+    }
+    const user = userResult.rows[0];
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+    await query('UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3', [token, expires, user.id]);
+    await sendResetPasswordEmail(email, token);
+    return res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset Password Route
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ message: 'Token and new password are required' });
+  try {
+    const userResult = await query('SELECT * FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW()', [token]);
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
+    const user = userResult.rows[0];
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await query('UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2', [hashedPassword, user.id]);
+    return res.status(200).json({ message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get current user
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const userRows = await query(
-      'SELECT id, email, username, contact_number, country, city, created_at FROM users WHERE id = $1',
-      [req.user.id]
-    );
-
-    if (!userRows || userRows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    const userDetails = userRows[0];
+    // req.user is set by authenticateToken and contains id, email, username, is_verified
+    // Fetch additional fields if needed, but always return at least id, email, username
+    const user = req.user || {};
+    // Optionally fetch more details from DB if needed
+    // But always return at least id, email, username
     res.json({
       success: true,
-      user: userDetails
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        // Optionally add more fields if available
+        contact_number: user.contact_number || null,
+        country: user.country || null,
+        city: user.city || null,
+        created_at: user.created_at || null
+      }
     });
-
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({

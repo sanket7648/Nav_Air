@@ -5,11 +5,11 @@ import { FloatingActionButton } from './components/FloatingActionButton';
 import { HomePage } from './pages/HomePage';
 import { GateNavigationPage } from './pages/GateNavigationPage';
 import { BaggageStatusPage } from './pages/BaggageStatusPage';
-import { FlightUpdatesPage } from './pages/FlightUpdatesPage';
+import FlightUpdatesPage from './pages/FlightUpdatesPage';
 import { EmergencyAssistancePage } from './pages/EmergencyAssistancePage';
 import { SlotBookingPage } from './pages/SlotBookingPage';
 import { ArtGuidePage } from './pages/ArtGuidePage';
-import { LoginPage } from './pages/LoginPage';
+import LoginPage from './pages/LoginPage';
 import { RegisterUser } from './pages/registeruser';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { AuthCallback } from './pages/AuthCallback';
@@ -19,10 +19,21 @@ import OtpSuccessPage from './pages/OtpSuccessPage';
 import { ProfilePage } from './pages/ProfilePage';
 import Footer from './components/Footer';
 import { sendLocation, queryFlights } from './services/api';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function AppContent() {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/verify-email' || location.pathname === '/auth/callback' || location.pathname === '/otp-verify' || location.pathname === '/otp-success';
+  const isAuthPage = [
+    '/login',
+    '/register',
+    '/verify-email',
+    '/auth/callback',
+    '/otp-verify',
+    '/otp-success',
+    '/forgot-password',
+    '/reset-password'
+  ].includes(location.pathname);
 
   useEffect(() => {
     const LOCATION_FLAG = 'locationSent';
@@ -72,6 +83,8 @@ function AppContent() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/otp-verify" element={<OtpVerificationPage />} />
         <Route path="/otp-success" element={<OtpSuccessPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     );
   }

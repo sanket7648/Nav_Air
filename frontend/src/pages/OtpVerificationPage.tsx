@@ -56,27 +56,24 @@ const OtpVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#0a1124] via-[#181f3a] to-[#181f3a] overflow-hidden">
-      <div className="relative w-full max-w-sm mx-auto p-4 rounded-2xl shadow-glass bg-white/90 dark:bg-neutral-900/90 border border-white/30 dark:border-neutral-800 backdrop-blur-lg">
-        {/* Decorative Orbs */}
-        <div className="absolute -top-6 -left-6 w-16 h-16 bg-gradient-to-br from-blue-400/30 to-purple-400/10 rounded-full blur-xl pointer-events-none"></div>
-        <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-gradient-to-br from-fuchsia-400/30 to-pink-400/10 rounded-full blur-xl pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-md p-8 rounded-2xl shadow-2xl bg-[#181f2a] flex flex-col items-center">
         {/* Logo & Title */}
         <div className="flex flex-col items-center mb-4 relative z-10">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-glow mb-2">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-1">Enter Your OTP</h2>
+          <h2 className="text-xl font-bold text-white mb-1">Enter Your OTP</h2>
         </div>
         {/* Error Message */}
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm relative z-10">
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-red-900/20 border border-red-800 text-red-300 text-sm relative z-10">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
         {/* OTP Form */}
-        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10 w-full">
           <div className="flex justify-center gap-2">
             {otp.map((digit, idx) => (
               <input
@@ -88,7 +85,7 @@ const OtpVerificationPage: React.FC = () => {
                 value={digit}
                 onChange={e => handleChange(e, idx)}
                 onPaste={handlePaste}
-                className="w-12 h-12 text-center text-2xl font-bold rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                className="w-12 h-12 text-center text-2xl font-bold rounded-lg border border-gray-700 bg-[#232946] text-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
                 disabled={isLoading}
                 autoFocus={idx === 0}
               />
