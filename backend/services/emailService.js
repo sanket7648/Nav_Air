@@ -203,7 +203,7 @@ async function sendEmail(to, subject, text) {
 }
 
 async function sendResetPasswordEmail(email, token) {
-  const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
   const subject = 'Password Reset Request';
   const text = `You requested a password reset. Click the link below to reset your password.\n\n${resetLink}\n\nIf you did not request this, please ignore this email.`;
   // Use your existing email sending logic

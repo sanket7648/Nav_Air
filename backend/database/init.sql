@@ -30,6 +30,11 @@ CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 -- Create index on verification_token for faster lookups
 CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
 
+-- Add columns for password reset functionality
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS reset_password_token VARCHAR(255),
+ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMP;
+
 -- Create baggage table
 CREATE TABLE IF NOT EXISTS baggage (
     bag_id VARCHAR(32) PRIMARY KEY,

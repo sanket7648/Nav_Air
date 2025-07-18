@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
             <form onSubmit={handleForgotSubmit} className="space-y-4">
               <div>
                 <label htmlFor="forgot-email" className="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
-                <input
+              <input
                   id="forgot-email" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
                   className="w-full px-3 py-1.5 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                   required autoFocus
@@ -116,11 +116,11 @@ const LoginPage: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="password" className="block text-xs font-medium text-gray-300 mb-1">Password</label>
-                <input
+              <input
                   id="password" type="password" value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full px-3 py-1.5 border border-gray-700 bg-[#232946] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-                  required
-                />
+                required
+              />
               </div>
               {loginError && <div className="text-red-400 text-center text-xs">{loginError}</div>}
               <button
