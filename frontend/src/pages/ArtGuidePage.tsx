@@ -105,7 +105,7 @@ export const ArtGuidePage: React.FC = () => {
   const filteredArtworks = artworks.filter(artwork => {
     const matchesFilter = selectedFilter === 'all' || artwork.category === selectedFilter;
     const matchesSearch = artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         artwork.artist.toLowerCase().includes(searchTerm.toLowerCase());
+                          artwork.artist.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -118,206 +118,186 @@ export const ArtGuidePage: React.FC = () => {
   };
 
   const getGridClass = (index: number) => {
-    // Create a masonry-like effect with varying heights
     const patterns = [
-      'row-span-2',
-      'row-span-1',
-      'row-span-2',
-      'row-span-1',
-      'row-span-2',
-      'row-span-1',
+      'row-span-2', 'row-span-1', 'row-span-2',
+      'row-span-1', 'row-span-2', 'row-span-1',
     ];
     return patterns[index % patterns.length];
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
-      {/* Header */}
-      <div className="mb-3">
-        <h2 className="text-xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
-        <p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>
-      </div>
-      {/* Search */}
-      <div className="mb-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search artworks or artists..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-          />
+    <>
+      {/* The background is now a pink-only gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-pink-100 to-pink-300 -z-10" />
+      
+      {/* The original container now just handles content layout, without its own background */}
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-4 md:px-6 pt-[120px] sm:pt-[140px]">
+        {/* Header */}
+        <div className="mb-3 max-w-5xl w-full">
+          <h2 className="text-xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
+          <p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>
         </div>
-      </div>
-      {/* Filters */}
-      <div className="mb-3">
-        <div className="flex space-x-1 overflow-x-auto pb-1">
-          {filters.map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => setSelectedFilter(filter.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                selectedFilter === filter.key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+        {/* Search */}
+        <div className="mb-3 max-w-5xl w-full">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search artworks or artists..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+        {/* Filters */}
+        <div className="mb-3 max-w-5xl w-full">
+          <div className="flex space-x-1 overflow-x-auto pb-1">
+            {filters.map((filter) => (
+              <button
+                key={filter.key}
+                onClick={() => setSelectedFilter(filter.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                  selectedFilter === filter.key
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Artworks Grid */}
+        <div className="grid grid-cols-2 gap-2 auto-rows-[120px] max-w-5xl w-full">
+          {filteredArtworks.map((artwork, index) => (
+            <div
+              key={artwork.id}
+              className={`${getGridClass(index)} bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden group cursor-pointer`}
+              onClick={() => setSelectedArtwork(artwork.id)}
             >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {/* Artworks Grid */}
-      <div className="grid grid-cols-2 gap-2 auto-rows-[120px]">
-        {filteredArtworks.map((artwork, index) => (
-          <div
-            key={artwork.id}
-            className={`${getGridClass(index)} bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden group cursor-pointer`}
-            onClick={() => setSelectedArtwork(artwork.id)}
-          >
-            <div className="relative h-full">
-              <img
-                src={artwork.image}
-                alt={artwork.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              {/* AR Badge */}
-              {artwork.hasAR && (
-                <div className="absolute top-2 right-2">
-                  <div className="bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
-                    <Smartphone className="w-3 h-3 inline mr-0.5" />
-                    AR
-                  </div>
-                </div>
-              )}
-              {/* Content */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white text-sm mb-1">{artwork.title}</h3>
-                    <p className="text-white/80 text-xs mb-2">{artwork.artist}</p>
-                    <div className="flex items-center space-x-1 text-white/70 text-xs">
-                      <MapPin className="w-3 h-3" />
-                      <span>{artwork.location}</span>
+              <div className="relative h-full">
+                <img
+                  src={artwork.image}
+                  alt={artwork.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                {artwork.hasAR && (
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[10px] font-medium">
+                      <Smartphone className="w-3 h-3 inline mr-0.5" />
+                      AR
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(artwork.id);
-                      }}
-                      className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-                    >
-                      <Heart className={`w-4 h-4 ${
-                        likedArtworks.includes(artwork.id) ? 'text-red-500 fill-red-500' : 'text-white'
-                      }`} />
-                    </button>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white text-sm mb-1">{artwork.title}</h3>
+                      <p className="text-white/80 text-xs mb-2">{artwork.artist}</p>
+                      <div className="flex items-center space-x-1 text-white/70 text-xs">
+                        <MapPin className="w-3 h-3" />
+                        <span>{artwork.location}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleLike(artwork.id); }}
+                        className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                      >
+                        <Heart className={`w-4 h-4 ${likedArtworks.includes(artwork.id) ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Artwork Detail Modal */}
-      {selectedArtwork && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4">
-          <div className="bg-white rounded-t-3xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-            {(() => {
-              const artwork = artworks.find(a => a.id === selectedArtwork);
-              if (!artwork) return null;
-              
-              return (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">{artwork.title}</h3>
-                    <button
-                      onClick={() => setSelectedArtwork(null)}
-                      className="p-2 hover:bg-gray-100 rounded-full"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  
-                  <img
-                    src={artwork.image}
-                    alt={artwork.title}
-                    className="w-full h-48 object-cover rounded-lg mb-4"
-                  />
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Artist</h4>
-                      <p className="text-gray-600">{artwork.artist}</p>
+        {/* Artwork Detail Modal */}
+        {selectedArtwork && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4">
+            <div className="bg-white rounded-t-3xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+              {(() => {
+                const artwork = artworks.find(a => a.id === selectedArtwork);
+                if (!artwork) return null;
+                
+                return (
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-gray-900">{artwork.title}</h3>
+                      <button onClick={() => setSelectedArtwork(null)} className="p-2 hover:bg-gray-100 rounded-full">×</button>
                     </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Description</h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">{artwork.description}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
+                    <img src={artwork.image} alt={artwork.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+                    <div className="space-y-4">
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">Year</h4>
-                        <p className="text-gray-600">{artwork.year}</p>
+                        <h4 className="font-semibold text-gray-900 mb-1">Artist</h4>
+                        <p className="text-gray-600">{artwork.artist}</p>
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">Medium</h4>
-                        <p className="text-gray-600">{artwork.medium}</p>
+                        <h4 className="font-semibold text-gray-900 mb-1">Description</h4>
+                        <p className="text-gray-600 text-sm leading-relaxed">{artwork.description}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">Year</h4>
+                          <p className="text-gray-600">{artwork.year}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">Medium</h4>
+                          <p className="text-gray-600">{artwork.medium}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-1">Location</h4>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-600">{artwork.location}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Location</h4>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">{artwork.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-4 mt-6">
-                    <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                      <MapPin className="w-4 h-4 mr-2 inline" />
-                      Get Directions
-                    </button>
-                    {artwork.hasAR && (
-                      <button className="flex-1 bg-yellow-400 text-yellow-900 py-3 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
-                        <Smartphone className="w-4 h-4 mr-2 inline" />
-                        View in AR
+                    <div className="flex space-x-4 mt-6">
+                      <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        <MapPin className="w-4 h-4 mr-2 inline" />
+                        Get Directions
                       </button>
-                    )}
+                      {artwork.hasAR && (
+                        <button className="flex-1 bg-yellow-400 text-yellow-900 py-3 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
+                          <Smartphone className="w-4 h-4 mr-2 inline" />
+                          View in AR
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Stats */}
-      <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Collection Stats</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{artworks.length}</div>
-            <div className="text-sm text-gray-600">Artworks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{artworks.filter(a => a.hasAR).length}</div>
-            <div className="text-sm text-gray-600">AR Enabled</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{likedArtworks.length}</div>
-            <div className="text-sm text-gray-600">Favorites</div>
+        {/* Stats */}
+        <div className="mt-8 max-w-5xl w-full">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Collection Stats</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{artworks.length}</div>
+                <div className="text-sm text-gray-600">Artworks</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{artworks.filter(a => a.hasAR).length}</div>
+                <div className="text-sm text-gray-600">AR Enabled</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{likedArtworks.length}</div>
+                <div className="text-sm text-gray-600">Favorites</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

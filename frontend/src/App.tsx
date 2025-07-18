@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
-import { FloatingActionButton } from './components/FloatingActionButton';
 import { HomePage } from './pages/HomePage';
 import { GateNavigationPage } from './pages/GateNavigationPage';
 import { BaggageStatusPage } from './pages/BaggageStatusPage';
@@ -17,7 +16,6 @@ import GoogleCallback from './pages/GoogleCallback';
 import OtpVerificationPage from './pages/OtpVerificationPage';
 import OtpSuccessPage from './pages/OtpSuccessPage';
 import { ProfilePage } from './pages/ProfilePage';
-import Footer from './components/Footer';
 import { sendLocation, queryFlights } from './services/api';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -52,6 +50,10 @@ function AppContent() {
           localStorage.setItem(LOCATION_FLAG, '1');
           localStorage.setItem(LAST_LOCATION, JSON.stringify(locationData));
           queryFlights(locationData).then(console.log);
+        })
+        .catch((error) => {
+          console.warn('Location API error:', error);
+          // Don't block the app if location fails
         });
     };
     const fallbackToIP = async () => {
@@ -64,7 +66,8 @@ function AppContent() {
         localStorage.setItem(LAST_LOCATION, JSON.stringify(locationData));
         queryFlights(locationData).then(console.log);
       } catch (e) {
-        // Optionally handle error
+        console.warn('IP-based location API error:', e);
+        // Don't block the app if location fails
       }
     };
     if (navigator.geolocation) {
@@ -105,8 +108,6 @@ function AppContent() {
           <Route path="/auth/callback" element={<GoogleCallback />} />
         </Routes>
       </main>
-      <FloatingActionButton />
-      <Footer />
     </div>
   );
 }

@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (token && config.headers) {
       (config.headers as any).Authorization = `Bearer ${token}`;
     }
@@ -31,10 +31,10 @@ api.interceptors.response.use(
     // Only redirect to login for actual authentication errors (401)
     // Don't redirect for other errors like 400 (bad request) or 404 (not found)
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+          // Token expired or invalid
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -94,13 +94,13 @@ export const authAPI = {
 export const authUtils = {
   // Set auth token and user data
   setAuth: (token: string, user: any) => {
-    localStorage.setItem('authToken', token);
+    localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
   },
 
   // Get auth token
   getToken: () => {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('token');
   },
 
   // Get user data
@@ -111,12 +111,12 @@ export const authUtils = {
 
   // Check if user is authenticated
   isAuthenticated: () => {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem('token');
   },
 
   // Clear auth data
   logout: () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
 };

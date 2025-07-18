@@ -159,9 +159,9 @@
     100% { background-position: 200% 0; }
   }
 
-  /* Smooth scroll behavior */
+  /* Disable smooth scroll behavior to prevent auto-scrolling */
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
   
   /* Enhanced navigation transitions */

@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
-  Navigation, 
+  Home, 
+  Navigation as NavigationIcon, 
   Package, 
   Plane, 
   AlertCircle, 
   Calendar, 
   Palette,
-  Clock,
-  MapPin,
-  TrendingUp,
-  Users,
   Zap,
   ArrowRight,
   Star,
@@ -18,413 +15,393 @@ import {
   Target,
   Shield,
   Brain,
-  Compass
+  Compass,
+  Wind,
+  Cloud,
+  TowerControl,
+  Coffee,
+  ShoppingCart,
+  Server,
+  Activity,
+  BookOpen,
+  Settings,
+  ChevronDown,
+  Quote,
+  Check,
+  X,
+  Users,
+  TrendingUp
 } from 'lucide-react';
-import UsernameDisplay from '../components/UsernameDisplay';
+import { Navigation } from '../components/Navigation';
+import { useAuth } from '../context/AuthContext';
 
+// --- MOCK COMPONENTS & UTILS ---
+
+/**
+ * Displays the authenticated user's name.
+ * In a real application, this would use an authentication context.
+ * @returns {React.ReactElement} The user's name or "Guest".
+ */
+const UsernameDisplay = () => {
+    return <>Anonymous User</>;
+};
+
+/**
+ * A hook to create a smooth, animated counter from 0 to a target value.
+ * @param {number} value - The target value to count up to.
+ * @returns {{ ref: React.RefObject, count: number }} - A ref to attach to the element and the animated count.
+ */
+const useAnimatedCounter = (value) => {
+    const [count, setCount] = useState(0);
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true });
+
+    useEffect(() => {
+        if (isInView) {
+            const controls = {
+                stop: () => {}
+            };
+            const animate = (start, end, duration) => {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const current = progress * (end - start) + start;
+                    setCount(parseFloat(current.toFixed(1)));
+                    if (progress < 1) {
+                        controls.stop = requestAnimationFrame(step);
+            }
+        };
+                controls.stop = requestAnimationFrame(step);
+            };
+            animate(0, value, 1500);
+            return () => cancelAnimationFrame(controls.stop);
+        }
+    }, [isInView, value]);
+
+    return { ref, count };
+};
+
+
+// --- UI COMPONENTS ---
+
+/**
+ * The main header for the application dashboard.
+ * @returns {React.ReactElement} The application header.
+ */
+const Header = () => (
+    <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+                <div className="flex items-center space-x-2">
+                    <Zap className="w-7 h-7 text-blue-600" />
+                    <span className="text-xl font-bold text-gray-800">NavAir</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <a href="/register" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm">
+                        Register
+                    </a>
+                    <a href="/login" className="px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+);
+
+/**
+ * The primary hero dashboard component.
+ * @param {{ currentTime: Date; flightProgress: number; }} props
+ * @returns {React.ReactElement} The hero dashboard.
+ */
+const HeroDashboard = ({ currentTime, flightProgress }) => {
+    const { user, isAuthenticated } = useAuth();
+    const journeySteps = [
+      { icon: Shield, title: "Security", time: "Est. 8 min", status: "completed" },
+      { icon: Coffee, title: "Get Coffee", time: "Near Gate A5", status: "current" },
+      { icon: ShoppingCart, title: "Duty-Free", time: "Find gifts", status: "upcoming" },
+      { icon: Plane, title: "Boarding", time: "Starts 14:00", status: "upcoming" },
+    ];
+
+    return (
+        <div
+            className="relative overflow-hidden rounded-3xl p-4 sm:p-6 text-white shadow-2xl"
+            style={{ background: "linear-gradient(135deg, #232946 0%, #121420 100%)" }}
+        >
+            <div className="absolute -top-10 -left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="relative z-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
+                    <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center shadow-lg"><Sparkles className="w-8 h-8 text-cyan-300" /></div>
+                        <div>
+                            <h2 className="text-2xl sm:text-3xl font-bold">Hello, <span className="text-cyan-300">{isAuthenticated && user ? (user.name || user.username || user.email) : 'Anonymous User'}</span></h2>
+                            <p className="text-blue-200 text-sm">Your AI travel assistant is ready.</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 sm:mt-0 text-center sm:text-right bg-white/5 p-2 rounded-lg">
+                        <div className="text-2xl font-bold tracking-wider">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        <div className="text-xs text-blue-300">{currentTime.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                    </div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-2xl mb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-center">
+                        <div className="flex items-center space-x-4"><Plane className="w-8 h-8 text-white" />
+                            <div>
+                                <p className="text-sm text-blue-200">Flight UA123 to SFO</p>
+                                <p className="text-lg font-bold">On Time</p>
+                            </div>
+                        </div>
+                        <div className="w-full sm:w-1/2 mt-4 sm:mt-0">
+                            <div className="flex justify-between items-center text-xs text-blue-200 mb-1"><span>Gate B12</span><span>Boarding at 14:00</span></div>
+                            <div className="w-full bg-white/10 rounded-full h-2"><motion.div className="h-2 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500" initial={{ width: 0 }} animate={{ width: `${flightProgress}%` }} transition={{ duration: 0.5, ease: "linear" }}></motion.div></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold mb-2 text-blue-200">Your Journey at a Glance</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {journeySteps.map((step, index) => {
+                            const Icon = step.icon;
+                            return (
+                                <div key={index} className={`p-3 rounded-lg text-center transition-all duration-300 ${step.status === 'completed' ? 'bg-green-500/20' : step.status === 'current' ? 'bg-cyan-400/30 animate-pulse-bright' : 'bg-white/5'}`}>
+                                    <Icon className={`w-6 h-6 mx-auto mb-1 ${step.status === 'completed' ? 'text-green-300' : step.status === 'current' ? 'text-cyan-300' : 'text-blue-300'}`} />
+                                    <p className="text-xs font-semibold">{step.title}</p>
+                                    <p className="text-[10px] text-blue-300">{step.time}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/**
+ * Displays key operational metrics with animated counters and progress bars.
+ * @returns {React.ReactElement} The key metrics dashboard.
+ */
+const KeyMetrics = () => {
+    const keyMetrics = [
+      { icon: Users, title: 'Passenger Flow', value: 1280, unit: '/hr', trend: '+5%', positive: true, target: 1500 },
+      { icon: Package, title: 'Baggage Efficiency', value: 99.2, unit: '%', trend: '+0.1%', positive: true, target: 99.5 },
+      { icon: ShoppingCart, title: 'Retail Performance', value: 450, unit: 'k/hr', trend: '-2%', positive: false, target: 500 },
+    ];
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {keyMetrics.map((metric, index) => {
+                const { ref, count } = useAnimatedCounter(metric.value);
+                const Icon = metric.icon;
+                const progress = (metric.value / metric.target) * 100;
+                return (
+                    <div key={index} ref={ref} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 transition-transform hover:scale-105">
+                        <div className="flex items-center space-x-3 mb-2">
+                            <Icon className="w-5 h-5 text-blue-500" />
+                            <p className="text-sm font-semibold text-gray-600">{metric.title}</p>
+                        </div>
+                        <p className="text-3xl font-bold text-gray-800">{count}{metric.unit}</p>
+                        <div className={`text-xs font-semibold flex items-center space-x-1 mb-2 ${metric.positive ? 'text-green-600' : 'text-red-600'}`}>
+                            <TrendingUp className={`w-4 h-4 ${!metric.positive && 'rotate-180'}`} />
+                            <span>{metric.trend} vs target</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div className="h-1.5 rounded-full bg-blue-500" style={{width: `${progress}%`}}></div>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+/**
+ * A grid of smart services offered by NavAir.
+ * @returns {React.ReactElement} The services grid.
+ */
+const ServicesGrid = () => {
+    const features = [
+        { icon: NavigationIcon, title: 'Smart Navigation', link: '/navigation', gradient: 'from-emerald-400 to-cyan-600', badge: 'AI' },
+        { icon: Package, title: 'Baggage Intelligence', link: '/baggage', gradient: 'from-orange-400 to-yellow-600', badge: 'LIVE' },
+        { icon: Plane, title: 'Flight Insights', link: '/flights', gradient: 'from-purple-400 to-indigo-600', badge: 'PRO' },
+        { icon: AlertCircle, title: 'Emergency Hub', link: '/emergency', gradient: 'from-red-400 to-pink-600', badge: 'SOS' },
+        { icon: Calendar, title: 'Smart Booking', link: '/booking', gradient: 'from-blue-400 to-purple-600', badge: 'NEW' },
+        { icon: Palette, title: 'Cultural Discovery', link: '/art', gradient: 'from-pink-400 to-purple-600', badge: 'AR' },
+    ];
+
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                    <motion.a key={feature.link} href={feature.link} className="group relative block" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <div className="relative overflow-hidden bg-white rounded-2xl p-4 shadow-sm border border-gray-200 h-full">
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className={`p-3 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg`}><Icon className="w-6 h-6 text-white" /></div>
+                                    <div className={`px-2 py-1 text-[10px] font-bold rounded-full ${feature.badge === 'AI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{feature.badge}</div>
+                                </div>
+                                <h4 className="font-bold text-neutral-800 mb-1">{feature.title}</h4>
+                            </div>
+                        </div>
+                    </motion.a>
+                );
+            })}
+        </div>
+    );
+};
+
+/**
+ * A detailed timeline component explaining the benefits of NavAir.
+ * @returns {React.ReactElement} The "How NavAir Helps" timeline.
+ */
+const HowNavAirHelps = () => {
+    const stages = [
+        { stage: "Pre-Arrival", description: "Plan your trip with predictive insights on traffic, parking availability, and security wait times.", icon: Calendar },
+        { stage: "At The Airport", description: "Navigate seamlessly with AR-powered directions, get real-time gate changes, and track your baggage live.", icon: NavigationIcon },
+        { stage: "Boarding & Flight", description: "Receive timely boarding reminders and stay updated with in-flight connection information.", icon: Plane },
+        { stage: "Arrival & Beyond", description: "Get baggage carousel info instantly and plan your onward journey with ground transport integration.", icon: Package },
+    ];
+
+    return (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            {stages.map((stage, index) => (
+                <div key={index} className="flex space-x-4 relative">
+                    <div className="flex flex-col items-center">
+                        <div className="bg-blue-500 text-white w-10 h-10 rounded-full flex items-center justify-center z-10">
+                            <stage.icon className="w-5 h-5" />
+                        </div>
+                        {index < stages.length - 1 && <div className="w-0.5 h-full bg-blue-200"></div>}
+                    </div>
+                    <div className="pb-8">
+                        <p className="font-bold text-blue-600">{stage.stage}</p>
+                        <p className="text-sm text-gray-600">{stage.description}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+/**
+ * An interactive FAQ section.
+ * @returns {React.ReactElement} The FAQ component.
+ */
+const FAQ = () => {
+    const faqItems = [
+      { q: "What is NavAir?", a: "NavAir is an AI-powered enterprise platform designed to streamline the airport experience for both passengers and staff. It integrates real-time data to provide intelligent navigation, predictive insights, and emergency assistance." },
+      { q: "Is my data secure?", a: "Absolutely. We use end-to-end encryption and adhere to the highest industry standards for data privacy and security. Your information is used solely to enhance your airport experience." },
+      { q: "How does the AI prediction work?", a: "Our AI models analyze historical and real-time data, including flight schedules, passenger flow, and weather patterns, to generate highly accurate predictions for wait times, delays, and optimal routes." },
+    ];
+    const [activeFaq, setActiveFaq] = useState<number | null>(0);
+
+                            return (
+        <div className="max-w-3xl mx-auto space-y-3">
+            {faqItems.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <button onClick={() => setActiveFaq(activeFaq === index ? null : index)} className="w-full flex justify-between items-center p-4 text-left">
+                        <span className="font-semibold text-neutral-800">{item.q}</span>
+                        <motion.div animate={{ rotate: activeFaq === index ? 180 : 0 }}><ChevronDown className="w-5 h-5 text-gray-500" /></motion.div>
+                    </button>
+                    <AnimatePresence>
+                    {activeFaq === index && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                            <div className="p-4 pt-0 text-neutral-600 text-sm">{item.a}</div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+/**
+ * The main homepage component that orchestrates all other components.
+ * @returns {React.ReactElement} The complete homepage.
+ */
 export const HomePage: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [batteryLevel] = useState(87);
   const [flightProgress, setFlightProgress] = useState(0);
 
-  // Get user from localStorage (or use your auth context/provider)
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const displayName = user?.name || user?.fullName || "Anonymous User";
-
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     const progressTimer = setInterval(() => {
-      setFlightProgress(prev => (prev + 0.5) % 100);
+      setFlightProgress(prev => (prev >= 100 ? 0 : prev + 0.5));
     }, 100);
     return () => clearInterval(progressTimer);
   }, []);
 
-  const features = [
-    {
-      icon: Navigation,
-      title: 'Smart Navigation',
-      description: 'AI-powered route optimization',
-      link: '/navigation',
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-600',
-      stats: '2.3k users',
-      trend: '+12%',
-      badge: 'AI'
-    },
-    {
-      icon: Package,
-      title: 'Baggage Intelligence',
-      description: 'Real-time tracking & predictions',
-      link: '/baggage',
-      gradient: 'from-orange-400 via-amber-500 to-yellow-600',
-      stats: '1.8k tracked',
-      trend: '+8%',
-      badge: 'LIVE'
-    },
-    {
-      icon: Plane,
-      title: 'Flight Insights',
-      description: 'Predictive delay analysis',
-      link: '/flights',
-      gradient: 'from-purple-400 via-violet-500 to-indigo-600',
-      stats: '94% accuracy',
-      trend: '+5%',
-      badge: 'PRO'
-    },
-    {
-      icon: AlertCircle,
-      title: 'Emergency Hub',
-      description: 'Instant assistance network',
-      link: '/emergency',
-      gradient: 'from-red-400 via-rose-500 to-pink-600',
-      stats: '<30s response',
-      trend: 'optimal',
-      badge: 'SOS'
-    },
-    {
-      icon: Calendar,
-      title: 'Smart Booking',
-      description: 'Optimal time slot prediction',
-      link: '/booking',
-      gradient: 'from-blue-400 via-indigo-500 to-purple-600',
-      stats: '2.1k slots',
-      trend: '+15%',
-      badge: 'NEW'
-    },
-    {
-      icon: Palette,
-      title: 'Cultural Discovery',
-      description: 'AR-enhanced art exploration',
-      link: '/art',
-      gradient: 'from-pink-400 via-fuchsia-500 to-purple-600',
-      stats: '47 exhibits',
-      trend: 'new',
-      badge: 'AR'
-    },
-  ];
-
-  const alerts = [
-    {
-      icon: Clock,
-      title: 'Gate Update',
-      message: 'UA123 → Gate B7 (Changed 5min ago)',
-      type: 'warning',
-      time: '2m ago',
-      priority: 'high'
-    },
-    {
-      icon: Package,
-      title: 'Baggage Alert',
-      message: 'Your luggage arrived at Carousel 3',
-      type: 'success',
-      time: '8m ago',
-      priority: 'medium'
-    },
-  ];
-
-  const quickStats = [
-    { label: 'On-Time Rate', value: '94.2%', change: '+2.1%', positive: true, icon: Target },
-    { label: 'Avg Security Wait', value: '8min', change: '-3min', positive: true, icon: Shield },
-    { label: 'Active Passengers', value: '12.4k', change: '+1.2k', positive: true, icon: Users },
-  ];
-
-  const aiInsights = [
-    { text: 'Best time to arrive: 2 hours early', confidence: 95 },
-    { text: 'Security wait time: 8-12 minutes', confidence: 88 },
-    { text: 'Gate B12 has food options nearby', confidence: 92 },
-  ];
+  const sectionVariants = {
+    hidden: { opacity: 0.6, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  };
 
   return (
-    <div className="pt-[120px] sm:pt-[140px] px-2 sm:px-4 md:px-6 pb-8 sm:pb-12 min-h-screen bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20">
-      <div className="w-full max-w-5xl mx-auto">
-      {/* Enhanced Hero Section */}
-        <div className="mb-4 mt-2">
-        <div
-          className="relative overflow-hidden rounded-2xl"
-          style={{
-            background: "linear-gradient(135deg, #3b4371 0%, #232946 100%)"
-          }}
-        >
-          {/* Vibrant Floating Bubbles */}
-          <div className="absolute top-10 left-20 w-32 h-32 bg-blue-400/40 rounded-full blur-2xl animate-pulse z-0"></div>
-          <div className="absolute top-1/4 right-24 w-24 h-24 bg-fuchsia-400/40 rounded-full blur-2xl animate-pulse z-0"></div>
-          <div className="absolute bottom-10 left-1/2 w-28 h-28 bg-cyan-400/40 rounded-full blur-2xl animate-pulse z-0"></div>
-          <div className="absolute bottom-16 right-16 w-36 h-36 bg-purple-400/40 rounded-full blur-2xl animate-pulse z-0"></div>
-          <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-yellow-300/40 rounded-full blur-2xl animate-pulse z-0"></div>
-          {/* You can add/remove bubbles as you like */}
+    <>
+      <div className="fixed inset-0 bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20 -z-10" />
+      <main className="pt-[100px] sm:pt-[120px] px-2 sm:px-4 md:px-6 pb-20 sm:pb-12 min-h-screen">
+        <div className="w-full max-w-5xl mx-auto space-y-12">
 
-          {/* Main Content */}
-          <div className="relative z-10 p-4 text-white">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center shadow-glow">
-                      <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center animate-pulse">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold mb-1">Welcome!</h2>
-                    <p className="text-lg font-semibold text-gradient-gold">
-                      <UsernameDisplay />
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-1 mb-3">
-                  <p className="text-blue-100 text-base font-medium flex items-center space-x-2">
-                    <Brain className="w-5 h-5" />
-                    <span>Your AI travel assistant is ready</span>
-                  </p>
-                  <p className="text-blue-200 text-xs">Next flight in 2h 15m • Everything is on track</p>
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="glass-dark rounded-2xl p-2">
-                  <div className="text-xs text-blue-200 mb-1">Flight Status</div>
-                  <div className="text-lg font-bold mb-1">UA123</div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-green-300 font-medium">On Time</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Static Info Cards */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="glass-dark rounded-xl p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-blue-100">Current Location</div>
-                    <div className="text-[10px] text-blue-300">Live tracking</div>
-                  </div>
-                </div>
-                <div className="text-base font-bold mb-1">Terminal 3, Level 2</div>
-                <div className="text-xs text-blue-200">Security Checkpoint A</div>
-                <div className="mt-2 flex items-center space-x-2">
-                  <Compass className="w-3 h-3 text-accent-400" />
-                  <span className="text-[10px] text-accent-300 font-medium">Optimal path calculated</span>
-                </div>
-              </div>
-              
-              <div className="glass-dark rounded-xl p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-purple-400 to-violet-500 rounded-lg flex items-center justify-center">
-                    <Plane className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-blue-100">Departure Gate</div>
-                    <div className="text-[10px] text-blue-300">8 min walk</div>
-                  </div>
-                </div>
-                <div className="text-base font-bold mb-1">Gate B12</div>
-                <div className="text-xs text-blue-200">Boarding starts 14:00</div>
-                <div className="mt-2">
-                  <div className="flex items-center justify-between text-[10px] text-blue-300 mb-1">
-                    <span>Walking progress</span>
-                    <span>{Math.round(flightProgress)}%</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-1">
-                    <div 
-                      className="h-1 rounded-full bg-gradient-to-r from-accent-400 to-accent-500 transition-all duration-300"
-                      style={{ width: `${flightProgress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* AI Insights */}
-            <div className="glass-dark rounded-xl p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Brain className="w-4 h-4 text-accent-400" />
-                <span className="text-xs font-semibold text-blue-100">AI Travel Insights</span>
-                <div className="px-2 py-0.5 bg-accent-400/20 text-accent-300 text-[10px] font-bold rounded-full">LIVE</div>
-              </div>
-              <div className="space-y-1">
-                {aiInsights.map((insight, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-xs text-blue-200">{insight.text}</span>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                      <span className="text-[10px] text-green-300 font-bold">{insight.confidence}%</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <motion.section initial="hidden" animate="visible" variants={sectionVariants}>
+            <HeroDashboard currentTime={currentTime} flightProgress={flightProgress} />
+        </motion.section>
 
-      {/* Live Alerts */}
-      {alerts.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-bold text-neutral-800">Live Updates</h3>
-            <div className="flex items-center space-x-1 text-xs text-neutral-500">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>Real-time</span>
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-2">Airport Operations at a Glance</h2>
+            <p className="text-center text-neutral-600 mb-8 max-w-2xl mx-auto">Real-time intelligence for unparalleled operational awareness.</p>
+            <KeyMetrics />
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">How NavAir Helps You</h2>
+            <HowNavAirHelps />
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold text-neutral-800">Smart Services</h3>
+                <a href="#" className="flex items-center space-x-1 text-sm text-blue-600 font-semibold"><span>View All</span><ArrowRight className="w-4 h-4" /></a>
             </div>
-          </div>
-          <div className="space-y-2">
-            {alerts.map((alert, index) => {
-              const Icon = alert.icon;
-              return (
-                <div
-                  key={index}
-                  className={`relative overflow-hidden rounded-xl p-3 border transition-all duration-300 hover:scale-[1.02] card-hover ${
-                    alert.type === 'warning' 
-                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
-                      : 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
-                  }`}
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-white/20 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
-                  <div className="flex items-start space-x-3 relative z-10">
-                    <div className={`p-2 rounded-lg ${
-                      alert.type === 'warning' 
-                        ? 'bg-gradient-to-br from-amber-400 to-orange-500' 
-                        : 'bg-gradient-to-br from-emerald-400 to-green-500'
-                    } shadow-lg`}>
-                      <Icon className="w-4 h-4 text-white" />
+            <ServicesGrid />
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Frequently Asked Questions</h2>
+            <FAQ />
+        </motion.section>
+
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="font-bold text-neutral-800 text-sm">{alert.title}</h4>
-                        <div className="flex items-center space-x-2">
-                          {alert.priority === 'high' && (
-                            <div className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-semibold rounded-full">
-                              HIGH
+      </main>
+      <footer className="bg-gray-800 text-white mt-12 py-8">
+          <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                  <h3 className="font-bold text-lg mb-2">About NavAir</h3>
+                  <p className="text-sm text-gray-400">NavAir is a premier enterprise solution dedicated to revolutionizing the airport experience through cutting-edge AI and real-time data integration.</p>
                             </div>
-                          )}
-                          <span className="text-[10px] text-neutral-500">{alert.time}</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-neutral-600 font-medium">{alert.message}</p>
+              <div>
+                  <h3 className="font-bold text-lg mb-2">Quick Links</h3>
+                  <ul className="space-y-1 text-sm text-gray-400">
+                      <li><a href="#" className="hover:text-white">Home</a></li>
+                      <li><a href="#" className="hover:text-white">Services</a></li>
+                      <li><a href="#" className="hover:text-white">Contact Us</a></li>
+                  </ul>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Features Grid */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-neutral-800">Smart Services</h3>
-          <div className="flex items-center space-x-1 text-xs text-neutral-500">
-            <Zap className="w-3 h-3" />
-            <span>AI-Powered</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Link
-                key={feature.link}
-                to={feature.link}
-                className="group relative"
-              >
-                <div className="relative overflow-hidden bg-white rounded-2xl p-3 shadow-glass border border-white/20 transition-all duration-500 hover:shadow-glow card-hover">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent"></div>
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-8 translate-x-8"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`p-2 rounded-xl bg-gradient-to-br ${feature.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
-                          feature.badge === 'AI' ? 'bg-purple-100 text-purple-700' :
-                          feature.badge === 'LIVE' ? 'bg-green-100 text-green-700' :
-                          feature.badge === 'NEW' ? 'bg-blue-100 text-blue-700' :
-                          feature.badge === 'AR' ? 'bg-pink-100 text-pink-700' :
-                          feature.badge === 'SOS' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {feature.badge}
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-1 transition-all duration-300" />
-                      </div>
+              <div>
+                  <h3 className="font-bold text-lg mb-2">Contact</h3>
+                  <p className="text-sm text-gray-400">contact@navair.com</p>
+                  <p className="text-sm text-gray-400">+1 234 567 890</p>
                     </div>
-                    
-                    <h4 className="font-bold text-neutral-800 mb-1 text-sm group-hover:text-primary-600 transition-colors duration-300">
-                      {feature.title}
-                    </h4>
-                    <p className="text-xs text-neutral-600 mb-2 leading-relaxed">
-                      {feature.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-semibold text-neutral-500">
-                        {feature.stats}
-                      </div>
-                      <div className={`flex items-center space-x-1 text-[10px] font-semibold ${
-                        feature.trend === 'new' ? 'text-purple-600' : 'text-green-600'
-                      }`}>
-                        {feature.trend !== 'new' && feature.trend !== 'optimal' && (
-                          <TrendingUp className="w-3 h-3" />
-                        )}
-                        {feature.trend === 'new' && <Star className="w-3 h-3" />}
-                        <span>{feature.trend}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Enhanced Airport Analytics */}
-      <div className="bg-white rounded-2xl p-3 shadow-glass border border-white/20">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-neutral-800">Airport Pulse</h3>
-          <div className="flex items-center space-x-1 text-xs text-neutral-500">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <span>Live Analytics</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {quickStats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div key={index} className="relative overflow-hidden text-center p-3 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 border border-neutral-200">
-                <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-4 translate-x-4"></div>
-                <div className="relative z-10">
-                  <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="text-base font-bold text-neutral-800 mb-0.5">{stat.value}</div>
-                  <div className="text-xs text-neutral-600 mb-1">{stat.label}</div>
-                  <div className={`text-[10px] font-semibold flex items-center justify-center space-x-1 ${
-                    stat.positive ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    <TrendingUp className={`w-3 h-3 ${!stat.positive && 'rotate-180'}`} />
-                    <span>{stat.change}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        </div>
-      </div>
-    </div>
+      </footer>
+    </>
   );
 };
+
+export default HomePage;
