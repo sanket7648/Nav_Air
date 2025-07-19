@@ -15,7 +15,7 @@ import {
   Settings,
   ChevronDown,
   Bell,
-  Search
+  Search,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NavAirLogo from '../assets/NavAir.jpg';
@@ -212,16 +212,18 @@ export const Navigation: React.FC = () => {
 
             {/* Right Side - Auth/User */}
             <div className="flex items-center space-x-4">
-              {/* Search Button */}
-              <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg">
-                <Search className="w-5 h-5" />
-              </button>
 
-              {/* Notifications */}
-              <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
+            {/* Search Button */}
+            <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg">
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Notifications */}
+
+            <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            </button>
 
               {/* User Profile or Auth Buttons */}
               {isAuthenticated && user ? (
