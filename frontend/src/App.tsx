@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
+import { ChatBot } from './components/ChatBot';
 import { HomePage } from './pages/HomePage';
 import { GateNavigationPage } from './pages/GateNavigationPage';
 import { BaggageStatusPage } from './pages/BaggageStatusPage';
@@ -108,6 +109,7 @@ function AppContent() {
           <Route path="/auth/callback" element={<GoogleCallback />} />
         </Routes>
       </main>
+      <ChatBot />
     </div>
   );
 }
