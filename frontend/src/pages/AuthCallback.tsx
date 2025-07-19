@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { authUtils } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export const AuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -17,23 +18,18 @@ export const AuthCallback: React.FC = () => {
 
       if (success === 'true' && token) {
         try {
-          // Store the token
-          authUtils.setAuth(token, {});
-
-          // Fetch user profile from backend
-          const meRes = await fetch('/api/auth/me', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const meData = await meRes.json();
-          if (meData && meData.user) {
-            localStorage.setItem('user', JSON.stringify(meData.user));
+          // Use AuthContext to handle the login
+          const result = await loginWithToken(token);
+          if (result.success) {
+            setStatus('success');
+            setMessage('Authentication successful! Redirecting...');
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage(result.message || 'Authentication failed.');
           }
-
-          setStatus('success');
-          setMessage('Authentication successful! Redirecting...');
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 2000);
         } catch (error) {
           setStatus('error');
           setMessage('Failed to complete authentication.');
@@ -45,7 +41,7 @@ export const AuthCallback: React.FC = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, loginWithToken]);
 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#0a1124] via-[#181f3a] to-[#181f3a] overflow-hidden">

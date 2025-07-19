@@ -15,6 +15,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithToken: (token: string, userData?: any) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 };
 
@@ -102,6 +103,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Login with token (for OAuth flows)
+  const loginWithToken = async (token: string, userData?: any) => {
+    try {
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // If userData is provided, use it directly
+      if (userData) {
+        const user = {
+          id: userData.id,
+          name: userData.username || userData.name,
+          username: userData.username,
+          email: userData.email,
+          avatarUrl: userData.avatarUrl || undefined,
+        };
+        setUser(user);
+        return { success: true };
+      }
+      
+      // Otherwise, fetch user data from backend
+      const res = await axios.get('/api/auth/me');
+      if (res.data && res.data.success && res.data.user) {
+        const user = {
+          id: res.data.user.id,
+          name: res.data.user.username || res.data.user.name,
+          username: res.data.user.username,
+          email: res.data.user.email,
+          avatarUrl: res.data.user.avatarUrl || undefined,
+        };
+        setUser(user);
+        return { success: true };
+      } else {
+        return { success: false, message: 'Failed to get user data' };
+      }
+    } catch (err: any) {
+      console.error('[AuthContext] loginWithToken error:', err);
+      return { success: false, message: err.response?.data?.message || 'Login failed' };
+    }
+  };
+
   // Logout
   const logout = () => {
     setUser(null);
@@ -115,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, loading]);
   
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, loginWithToken, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

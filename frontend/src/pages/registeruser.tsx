@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NavAirLogo from '../assets/NavAir.jpg';
 
 export const RegisterUser: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +60,7 @@ export const RegisterUser: React.FC = () => {
         <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-gradient-to-br from-fuchsia-400/30 to-pink-400/10 rounded-full blur-xl pointer-events-none"></div>
         {/* Logo & Welcome */}
         <div className="flex flex-col items-center mb-6 relative z-10">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-400 flex items-center justify-center mb-2 shadow-lg">
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M12 2a1 1 0 0 1 .993.883L13 3v1.07a7.001 7.001 0 0 1 6.928 6.13l.014.2a1 1 0 0 1-1.993.117l-.014-.117A5.001 5.001 0 0 0 13 4.07V5a1 1 0 0 1-1.993.117L11 5V4.07A7.001 7.001 0 0 1 4.072 10.2a1 1 0 0 1-1.993-.117l.014-.2A7.001 7.001 0 0 1 11 4.07V3a1 1 0 0 1 1-1Z"/></svg>
-          </div>
+          <img src={NavAirLogo} alt="NavAir" className="w-16 h-16 object-cover mb-2" />
           <h2 className="text-3xl font-bold text-white mb-1">Create Account</h2>
           <p className="text-gray-400">Register for your NavAir experience</p>
         </div>

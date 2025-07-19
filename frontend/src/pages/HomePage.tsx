@@ -8,7 +8,6 @@ import {
   AlertCircle, 
   Calendar, 
   Palette,
-  Zap,
   ArrowRight,
   Star,
   Sparkles,
@@ -34,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
+import NavAirLogo from '../assets/NavAir.jpg';
 
 // --- MOCK COMPONENTS & UTILS ---
 
@@ -94,7 +94,7 @@ const Header = () => (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
                 <div className="flex items-center space-x-2">
-                    <Zap className="w-7 h-7 text-blue-600" />
+                    <img src={NavAirLogo} alt="NavAir" className="w-12 h-12 object-cover" />
                     <span className="text-xl font-bold text-gray-800">NavAir</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -297,7 +297,7 @@ const FAQ = () => {
     ];
     const [activeFaq, setActiveFaq] = useState < number | null > (0);
 
-    return (
+                            return (
         <div className="max-w-3xl mx-auto space-y-3">
             {faqItems.map((item, index) => (
                 <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -314,9 +314,9 @@ const FAQ = () => {
                             transition={{ duration: 0.3 }}
                         >
                             <div className="p-4 pt-0 text-neutral-600 text-sm overflow-hidden">{item.a}</div>
-                        </motion.div>
-                    )}
-                    </AnimatePresence>
+                </motion.div>
+            )}
+        </AnimatePresence>
                 </div>
             ))}
         </div>
@@ -349,11 +349,11 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col min-h-screen">
       <div className="fixed inset-0 bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20 -z-10" />
       
       {/* Main content */}
-      <main className="pt-[100px] sm:pt-[100px] px-2 sm:px-4 md:px-6 pb-8 flex-1">
+      <main className="pt-[100px] sm:pt-[100px] px-2 sm:px-4 md:px-6 pb-8 flex-grow">
         <div className="w-full max-w-5xl mx-auto space-y-12">
 
         <motion.section initial="hidden" animate="visible" variants={sectionVariants}>
@@ -438,7 +438,7 @@ export const HomePage: React.FC = () => {
         </motion.section>
 
         <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
-            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Customer Testimonials</h2>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Testimonials</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center mb-4">
@@ -463,7 +463,7 @@ export const HomePage: React.FC = () => {
                             {[...Array(5)].map((_, i) => (
                                 <Star key={i} className="w-4 h-4 fill-current" />
                             ))}
-                        </div>
+                            </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-4">"The baggage tracking feature saved me so much time. I knew exactly where my luggage was!"</p>
                     <div className="flex items-center">
@@ -508,14 +508,14 @@ export const HomePage: React.FC = () => {
               <h3 className="font-bold text-lg mb-3 text-white">Quick Links</h3>
               <ul className="space-y-2 text-sm text-gray-300">
                 <li><a href="#" className="hover:text-white transition-colors duration-200">Home</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-200">Services</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-200">Terms of Use</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-200">Privacy Policy</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold text-lg mb-3 text-white">Contact</h3>
-              <p className="text-sm text-gray-300">contact@navair.com</p>
-              <p className="text-sm text-gray-300">+1 234 567 890</p>
+              <p className="text-sm text-gray-300">navair.services@gmail.com</p>
+              <p className="text-sm text-gray-300">+919667093725</p>
             </div>
           </div>
           

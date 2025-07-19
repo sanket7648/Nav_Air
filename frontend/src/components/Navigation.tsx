@@ -9,7 +9,6 @@ import {
   AlertCircle, 
   Calendar, 
   Palette,
-  Zap,
   ArrowLeft,
   LogOut,
   User,
@@ -19,6 +18,7 @@ import {
   Search
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import NavAirLogo from '../assets/NavAir.jpg';
 
 // Navigation data
 const navItems = [
@@ -171,15 +171,15 @@ export const Navigation: React.FC = () => {
     <>
       {/* Main Navigation Bar */}
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200"
+        className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-800 via-blue-900 to-indigo-900 backdrop-blur-md border-b border-blue-700"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top Bar */}
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <a href="/" className="flex items-center space-x-2">
-              <Zap className="w-7 h-7 text-blue-600" />
-              <span className="text-xl font-bold text-gray-800">NavAir</span>
+              <img src={NavAirLogo} alt="NavAir" className="w-14 h-14 object-cover" />
+              <span className="text-xl font-bold text-white">NavAir</span>
             </a>
 
             {/* Desktop Navigation Links */}
@@ -190,11 +190,12 @@ export const Navigation: React.FC = () => {
                   <a
                     href={item.path}
                     key={item.path}
-                    className={`relative px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 no-underline hover:no-underline focus:no-underline ${
                       isActive 
-                        ? 'text-blue-600 bg-blue-50' 
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'text-white bg-white/20 shadow-lg' 
+                        : 'text-white/90 hover:bg-white/10 hover:shadow-md'
                     }`}
+                    style={{ textDecoration: 'none' }}
                   >
                     <span>{item.label}</span>
                     {isActive && (
@@ -212,14 +213,14 @@ export const Navigation: React.FC = () => {
             {/* Right Side - Auth/User */}
             <div className="flex items-center space-x-4">
               {/* Search Button */}
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg">
                 <Search className="w-5 h-5" />
               </button>
 
               {/* Notifications */}
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
+              <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
               </button>
 
               {/* User Profile or Auth Buttons */}
@@ -227,10 +228,10 @@ export const Navigation: React.FC = () => {
                 <UserProfileDropdown user={user} onLogout={handleLogout} />
               ) : (
                 <div className="flex items-center space-x-2">
-                  <a href="/login" className="px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <a href="/login" className="px-4 py-2 text-sm font-semibold text-white bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 hover:border-white/50 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
                     Sign In
                   </a>
-                  <a href="/register" className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                  <a href="/register" className="px-4 py-2 text-sm font-semibold text-white bg-purple-600/80 backdrop-blur-sm border border-purple-400/50 hover:bg-purple-700/90 hover:border-purple-300/70 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
                     Register
                   </a>
                 </div>
