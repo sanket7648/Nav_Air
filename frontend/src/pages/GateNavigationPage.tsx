@@ -85,7 +85,7 @@ export const GateNavigationPage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-purple-100 -z-10" />
 
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
         <div className="w-full max-w-5xl mx-auto">
         {/* Header */}
           <div className="mb-4">

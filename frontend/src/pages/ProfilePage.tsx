@@ -76,7 +76,7 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
       {/* Header */}
       <div className="mb-6">
         <a href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">

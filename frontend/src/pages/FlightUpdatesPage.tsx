@@ -47,7 +47,7 @@ export default function FlightUpdatesPage() {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-100 to-purple-200 -z-10" />
 
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-10 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
+      <div className="flex flex-col items-center py-6 sm:py-10 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
         <form
           onSubmit={handleSearch}
           className="bg-gradient-to-br from-sky-100 to-blue-100 shadow-2xl rounded-3xl p-4 sm:p-8 flex flex-col gap-4 sm:gap-6 w-full max-w-xl border border-blue-200"

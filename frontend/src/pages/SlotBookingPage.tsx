@@ -118,11 +118,11 @@ export const SlotBookingPage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-purple-100 -z-10" />
 
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[120px] sm:pt-[140px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
         <div className="w-full max-w-md mx-auto">
             {/* Header */}
             <div className="mb-3 text-center">
-                <h2 className="text-xl font-bold text-gray-900 mb-0.5">Slot Booking</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Slot Booking</h2>
                 <p className="text-gray-600 text-sm">Reserve your preferred time slots</p>
             </div>
 

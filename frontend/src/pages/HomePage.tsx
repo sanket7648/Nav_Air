@@ -259,10 +259,10 @@ const ServicesGrid = () => {
  */
 const HowNavAirHelps = () => {
     const stages = [
-        { stage: "Pre-Arrival", description: "Plan your trip with predictive insights on traffic, parking availability, and security wait times.", icon: Calendar },
-        { stage: "At The Airport", description: "Navigate seamlessly with AR-powered directions, get real-time gate changes, and track your baggage live.", icon: NavigationIcon },
-        { stage: "Boarding & Flight", description: "Receive timely boarding reminders and stay updated with in-flight connection information.", icon: Plane },
-        { stage: "Arrival & Beyond", description: "Get baggage carousel info instantly and plan your onward journey with ground transport integration.", icon: Package },
+      { stage: "Pre-Arrival", description: "Plan your trip with predictive insights on traffic, parking availability, and security wait times.", icon: Calendar },
+      { stage: "At The Airport", description: "Navigate seamlessly with AR-powered directions, get real-time gate changes, and track your baggage live.", icon: NavigationIcon },
+      { stage: "Boarding & Flight", description: "Receive timely boarding reminders and stay updated with in-flight connection information.", icon: Plane },
+      { stage: "Arrival & Beyond", description: "Get baggage carousel info instantly and plan your onward journey with ground transport integration.", icon: Package },
     ];
 
     return (
@@ -295,9 +295,9 @@ const FAQ = () => {
       { q: "Is my data secure?", a: "Absolutely. We use end-to-end encryption and adhere to the highest industry standards for data privacy and security. Your information is used solely to enhance your airport experience." },
       { q: "How does the AI prediction work?", a: "Our AI models analyze historical and real-time data, including flight schedules, passenger flow, and weather patterns, to generate highly accurate predictions for wait times, delays, and optimal routes." },
     ];
-    const [activeFaq, setActiveFaq] = useState<number | null>(0);
+    const [activeFaq, setActiveFaq] = useState < number | null > (0);
 
-                            return (
+    return (
         <div className="max-w-3xl mx-auto space-y-3">
             {faqItems.map((item, index) => (
                 <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -307,11 +307,16 @@ const FAQ = () => {
                     </button>
                     <AnimatePresence>
                     {activeFaq === index && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                            <div className="p-4 pt-0 text-neutral-600 text-sm">{item.a}</div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                        <motion.div 
+                            initial={{ opacity: 0, maxHeight: 0 }} 
+                            animate={{ opacity: 1, maxHeight: 200 }} 
+                            exit={{ opacity: 0, maxHeight: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <div className="p-4 pt-0 text-neutral-600 text-sm overflow-hidden">{item.a}</div>
+                        </motion.div>
+                    )}
+                    </AnimatePresence>
                 </div>
             ))}
         </div>
@@ -344,9 +349,11 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <div className="fixed inset-0 bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20 -z-10" />
-      <main className="pt-[100px] sm:pt-[120px] px-2 sm:px-4 md:px-6 pb-20 sm:pb-12 min-h-screen">
+      
+      {/* Main content */}
+      <main className="pt-[100px] sm:pt-[100px] px-2 sm:px-4 md:px-6 pb-8 flex-1">
         <div className="w-full max-w-5xl mx-auto space-y-12">
 
         <motion.section initial="hidden" animate="visible" variants={sectionVariants}>
@@ -377,30 +384,158 @@ export const HomePage: React.FC = () => {
             <FAQ />
         </motion.section>
 
+        {/* Additional Content Sections */}
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Airport Statistics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-2">2.5M+</div>
+                    <div className="text-sm text-gray-600">Annual Passengers</div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-2">99.2%</div>
+                    <div className="text-sm text-gray-600">On-Time Performance</div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">150+</div>
+                    <div className="text-sm text-gray-600">Daily Flights</div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center">
+                    <div className="text-3xl font-bold text-orange-600 mb-2">24/7</div>
+                    <div className="text-sm text-gray-600">Operations</div>
+                </div>
+            </div>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Latest Updates</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Plane className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900">New Flight Routes</h3>
+                            <p className="text-sm text-gray-600">Added 5 new international destinations</p>
+                        </div>
                     </div>
-      </main>
-      <footer className="bg-gray-800 text-white mt-12 py-8">
-          <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                  <h3 className="font-bold text-lg mb-2">About NavAir</h3>
-                  <p className="text-sm text-gray-400">NavAir is a premier enterprise solution dedicated to revolutionizing the airport experience through cutting-edge AI and real-time data integration.</p>
-                            </div>
-              <div>
-                  <h3 className="font-bold text-lg mb-2">Quick Links</h3>
-                  <ul className="space-y-1 text-sm text-gray-400">
-                      <li><a href="#" className="hover:text-white">Home</a></li>
-                      <li><a href="#" className="hover:text-white">Services</a></li>
-                      <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                  </ul>
+                    <p className="text-sm text-gray-600">We've expanded our network to include new exciting destinations across Europe and Asia, providing more travel options for our passengers.</p>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900">Enhanced Security</h3>
+                            <p className="text-sm text-gray-600">New AI-powered screening</p>
+                        </div>
                     </div>
-              <div>
-                  <h3 className="font-bold text-lg mb-2">Contact</h3>
-                  <p className="text-sm text-gray-400">contact@navair.com</p>
-                  <p className="text-sm text-gray-400">+1 234 567 890</p>
+                    <p className="text-sm text-gray-600">Our new AI-powered security screening system reduces wait times by 40% while maintaining the highest safety standards.</p>
+                </div>
+            </div>
+        </motion.section>
+
+        <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}>
+            <h2 className="text-3xl font-bold text-center text-neutral-800 mb-8">Customer Testimonials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                        <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-current" />
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">"NavAir made my airport experience incredibly smooth. The real-time updates and navigation were spot-on!"</p>
+                    <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full mr-3"></div>
+                        <div>
+                            <div className="font-semibold text-sm">Sarah Johnson</div>
+                            <div className="text-xs text-gray-500">Business Traveler</div>
+                        </div>
                     </div>
                 </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                        <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-current" />
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">"The baggage tracking feature saved me so much time. I knew exactly where my luggage was!"</p>
+                    <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full mr-3"></div>
+                        <div>
+                            <div className="font-semibold text-sm">Mike Chen</div>
+                            <div className="text-xs text-gray-500">Frequent Flyer</div>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center mb-4">
+                        <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 fill-current" />
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">"The emergency assistance feature gave me peace of mind during my travels."</p>
+                    <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full mr-3"></div>
+                        <div>
+                            <div className="font-semibold text-sm">Emily Davis</div>
+                            <div className="text-xs text-gray-500">Family Traveler</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </motion.section>
+
+        </div>
+      </main>
+
+      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
+        <div className="max-w-5xl mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div>
+              <h3 className="font-bold text-lg mb-3 text-white">About NavAir</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">NavAir is a premier enterprise solution dedicated to revolutionizing the airport experience through cutting-edge AI and real-time data integration.</p>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg mb-3 text-white">Quick Links</h3>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li><a href="#" className="hover:text-white transition-colors duration-200">Home</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-200">Services</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-200">Contact Us</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg mb-3 text-white">Contact</h3>
+              <p className="text-sm text-gray-300">contact@navair.com</p>
+              <p className="text-sm text-gray-300">+1 234 567 890</p>
+            </div>
+          </div>
+          
+          {/* Copyright Section */}
+          <div className="border-t border-gray-700 pt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+              <div className="text-sm text-gray-400">
+                © 2025 NavAir. All rights reserved.
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-400">
+                <span>Built with</span>
+                <span className="text-red-500 animate-pulse">❤️</span>
+                <span>by</span>
+                <span className="text-blue-400 font-semibold">NityaVira</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </footer>
-    </>
+    </div>
   );
 };
 

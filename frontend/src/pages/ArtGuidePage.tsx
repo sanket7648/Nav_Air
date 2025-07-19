@@ -131,10 +131,10 @@ export const ArtGuidePage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-pink-100 to-pink-300 -z-10" />
       
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-4 md:px-6 pt-[120px] sm:pt-[140px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-4 md:px-6 pt-[100px] sm:pt-[100px]">
         {/* Header */}
         <div className="mb-3 max-w-5xl w-full">
-          <h2 className="text-xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
           <p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>
         </div>
         {/* Search */}
