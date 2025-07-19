@@ -34,6 +34,7 @@ import {
 import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
 import NavAirLogo from '../assets/NavAir.jpg';
+import Footer from '../components/Footer';
 
 // --- MOCK COMPONENTS & UTILS ---
 
@@ -353,7 +354,7 @@ export const HomePage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-neutral-50 via-blue-50/30 to-purple-50/20 -z-10" />
       
       {/* Main content */}
-      <main className="pt-[100px] sm:pt-[100px] px-2 sm:px-4 md:px-6 pb-8 flex-grow">
+      <main className="pt-[100px] sm:pt-[100px] px-2 sm:px-4 md:px-6 pb-8 flex-grow md:pb-[200px]">
         <div className="w-full max-w-5xl mx-auto space-y-12">
 
         <motion.section initial="hidden" animate="visible" variants={sectionVariants}>
@@ -496,45 +497,7 @@ export const HomePage: React.FC = () => {
 
         </div>
       </main>
-
-      <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div className="max-w-5xl mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-white">About NavAir</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">NavAir is a premier enterprise solution dedicated to revolutionizing the airport experience through cutting-edge AI and real-time data integration.</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-white">Quick Links</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors duration-200">Home</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-200">Terms of Use</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-200">Privacy Policy</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-white">Contact</h3>
-              <p className="text-sm text-gray-300">navair.services@gmail.com</p>
-              <p className="text-sm text-gray-300">+919667093725</p>
-            </div>
-          </div>
-          
-          {/* Copyright Section */}
-          <div className="border-t border-gray-700 pt-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-              <div className="text-sm text-gray-400">
-                © 2025 NavAir. All rights reserved.
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <span>Built with</span>
-                <span className="text-red-500 animate-pulse">❤️</span>
-                <span>by</span>
-                <span className="text-blue-400 font-semibold">NityaVira</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
   Camera,
   Info
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export const ArtGuidePage: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -131,7 +132,7 @@ export const ArtGuidePage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-pink-100 to-pink-300 -z-10" />
       
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-4 md:px-6 pt-[100px] sm:pt-[100px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px] md:pb-[200px]">
         {/* Header */}
         <div className="mb-3 max-w-5xl w-full">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
@@ -298,6 +299,10 @@ export const ArtGuidePage: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
     </>
   );
 };
+
+export default ArtGuidePage;

@@ -11,6 +11,7 @@ import {
   Share2,
   Clock
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export const EmergencyAssistancePage: React.FC = () => {
   const [isLocationShared, setIsLocationShared] = useState(false);
@@ -104,12 +105,12 @@ export const EmergencyAssistancePage: React.FC = () => {
   };
 
   return (
-    <>
+    <div>
       {/* This new div creates a fixed background layer for the entire page */}
       <div className="fixed inset-0 bg-gradient-to-br from-red-50 to-pink-100 -z-10" />
 
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px] md:pb-[200px]">
         <div className="w-full max-w-5xl mx-auto">
         {/* Header */}
           <div className="mb-4">
@@ -264,6 +265,10 @@ export const EmergencyAssistancePage: React.FC = () => {
           </div>
         </div>
       </div>
-    </>
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
+    </div>
   );
 };
+
+export default EmergencyAssistancePage;

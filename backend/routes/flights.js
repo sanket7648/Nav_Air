@@ -317,58 +317,77 @@ function isValidDate(dateStr) {
 router.get('/search-flights', async (req, res) => {
   try {
     const { from = 'BLR', to = 'ALL', date, direction = 'dep' } = req.query;
-    if (!date || !isValidDate(date)) {
-      return res.status(400).json({ error: 'Date is required in YYYYMMDD format.' });
+    // Only support BLR for web scraping
+    if ((from !== 'BLR' && to !== 'BLR')) {
+      return res.status(501).json({ error: 'Currently, only BLR airport is supported for live flight data.' });
     }
-
-    // Format date for AviationStack (YYYY-MM-DD)
-    const formattedDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-
-    // Build AviationStack API URL
-    let url = `http://api.aviationstack.com/v1/flights?access_key=${AVIATIONSTACK_API_KEY}&flight_date=${formattedDate}`;
+    // Use web scraping for BLR
+    let flights = [];
     if (direction === 'dep') {
-      if (from && from !== 'ALL') url += `&dep_iata=${from}`;
-      if (to && to !== 'ALL') url += `&arr_iata=${to}`;
+      flights = await scrapeBLRDepartures(to);
     } else if (direction === 'arr') {
-      if (to && to !== 'ALL') url += `&arr_iata=${to}`;
-      if (from && from !== 'ALL') url += `&dep_iata=${from}`;
+      flights = await scrapeBLRArrivals(from);
     }
-
-    const response = await axios.get(url);
-    const flights = response.data?.data || [];
-
-    // Map to your frontend format
-    const mapped = flights.map(flight => ({
-      flightNumber: flight.flight?.iata || '',
-      airline: flight.airline?.name || '',
-      airlineImg: '', // AviationStack free tier does not provide logos
-      origin: flight.departure?.airport || '',
-      destination: flight.arrival?.airport || '',
-      scheduledTime: direction === 'dep'
-        ? flight.departure?.scheduled || ''
-        : flight.arrival?.scheduled || '',
-      estimatedTime: direction === 'dep'
-        ? flight.departure?.estimated || ''
-        : flight.arrival?.estimated || '',
-      status: flight.flight_status || '',
-      terminal: direction === 'dep'
-        ? flight.departure?.terminal || ''
-        : flight.arrival?.terminal || '',
-      direction
-    }));
-
-    res.json({ flights: mapped });
+    res.json({ flights });
   } catch (err) {
-    if (err.response) {
-      console.error('Flight search error:', {
-        status: err.response.status,
-        data: err.response.data,
-        url: err.config?.url
-      });
-    } else {
-      console.error('Flight search error:', err.message);
-    }
     res.status(500).json({ error: 'Failed to fetch flights.' });
+  }
+});
+
+router.get('/test-scraper', async (req, res) => {
+  try {
+    console.log('🧪 Testing real-time flight scraper...');
+    
+    const [departures, arrivals] = await Promise.all([
+      scrapeBLRDepartures(),
+      scrapeBLRArrivals()
+    ]);
+    
+    res.json({
+      success: true,
+      message: 'Real-time scraper test completed',
+      departures: {
+        count: departures.length,
+        flights: departures.slice(0, 3) // Show first 3 for testing
+      },
+      arrivals: {
+        count: arrivals.length,
+        flights: arrivals.slice(0, 3) // Show first 3 for testing
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Test scraper error:', err.message);
+    res.status(500).json({ error: 'Scraper test failed', details: err.message });
+  }
+});
+
+router.get('/test-flightradar24', async (req, res) => {
+  try {
+    console.log('🛩️ Testing FlightRadar24 scraper...');
+    
+    const [departures, arrivals] = await Promise.all([
+      scrapeFlightRadar24('departures'),
+      scrapeFlightRadar24('arrivals')
+    ]);
+    
+    res.json({
+      success: true,
+      message: 'FlightRadar24 scraper test completed',
+      departures: {
+        count: departures.length,
+        flights: departures.slice(0, 5) // Show first 5 for testing
+      },
+      arrivals: {
+        count: arrivals.length,
+        flights: arrivals.slice(0, 5) // Show first 5 for testing
+      },
+      timestamp: new Date().toISOString(),
+      source: 'FlightRadar24 API'
+    });
+  } catch (err) {
+    console.error('FlightRadar24 test error:', err.message);
+    res.status(500).json({ error: 'FlightRadar24 test failed', details: err.message });
   }
 });
 

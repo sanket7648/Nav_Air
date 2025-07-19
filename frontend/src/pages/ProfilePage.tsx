@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, MapPin, Save, ArrowLeft } from 'lucide-react';
 import { authUtils, authAPI } from '../services/api';
+import Footer from '../components/Footer';
 
 export const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -171,6 +172,8 @@ export const ProfilePage: React.FC = () => {
           </p>
         </div>
       </div>
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
     </div>
   );
 }; 

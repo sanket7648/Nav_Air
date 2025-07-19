@@ -11,6 +11,7 @@ import {
   Car,
   Plane
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export const SlotBookingPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -118,7 +119,7 @@ export const SlotBookingPage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-purple-100 -z-10" />
 
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px] md:pb-[200px]">
         <div className="w-full max-w-md mx-auto">
             {/* Header */}
             <div className="mb-3 text-center">
@@ -359,6 +360,10 @@ export const SlotBookingPage: React.FC = () => {
             )}
         </div>
       </div>
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
     </>
   );
 };
+
+export default SlotBookingPage;

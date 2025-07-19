@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 // --- TYPE DEFINITIONS ---
 type Flight = {
@@ -237,18 +238,17 @@ export default function FlightUpdatesPage() {
     setHasSearched(true);
 
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-      const mockFlights: Flight[] = [
-          { airline: 'IndiGo', flightNumber: '6E 234', origin: from, destination: to === 'ALL' ? 'DEL' : to, scheduledTime: '2025-07-19T10:30', estimatedTime: '2025-07-19T10:45', terminal: 'T1', status: 'delayed' },
-          { airline: 'Air India', flightNumber: 'AI 505', origin: from, destination: to === 'ALL' ? 'BOM' : to, scheduledTime: '2025-07-19T11:00', estimatedTime: '2025-07-19T11:00', terminal: 'T2', status: 'scheduled' },
-          { airline: 'Vistara', flightNumber: 'UK 809', origin: from, destination: to === 'ALL' ? 'MAA' : to, scheduledTime: '2025-07-19T12:15', estimatedTime: '2025-07-19T12:15', terminal: 'T1', status: 'active' },
-          { airline: 'SpiceJet', flightNumber: 'SG 816', origin: from, destination: to === 'ALL' ? 'CCU' : to, scheduledTime: '2025-07-19T09:00', estimatedTime: '2025-07-19T09:00', terminal: 'T1', status: 'cancelled' },
-      ];
-      // Filter mock flights to simulate a real search
-      const results = mockFlights.filter(f => f.origin === from && (to === 'ALL' || f.destination === to));
-      setFlights(results);
-
+      // Format date as YYYYMMDD
+      const formattedDate = date.replace(/-/g, '');
+      const response = await axios.get('/api/flights/search-flights', {
+        params: {
+          from,
+          to,
+          date: formattedDate,
+          direction,
+        }
+      });
+      setFlights(response.data.flights || []);
     } catch (err: any) {
       setError(err.response?.data?.error || 'An unexpected error occurred.');
     } finally {
@@ -290,12 +290,12 @@ export default function FlightUpdatesPage() {
             <a href="/login" className="mt-2 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
               Go to Sign In
             </a>
-        </div>
+            </div>
       </Modal>
 
       {/* Main Page Layout */}
       <div className="fixed inset-0 bg-gray-50 -z-10" />
-      <div className="flex flex-col items-center justify-start min-h-screen py-10 sm:py-16 px-4 pt-[100px] sm:pt-[120px]">
+      <div className="flex flex-col items-center py-8 sm:py-14 px-2 sm:px-0 pt-[110px] sm:pt-[110px] min-h-screen md:pb-[200px]">
         <FlightSearchForm
           from={from} setFrom={setFrom}
           to={to} setTo={setTo}
@@ -309,6 +309,9 @@ export default function FlightUpdatesPage() {
             {renderResults()}
         </div>
       </div>
+
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
 
       {/* Embedded CSS for animations */}
       <style>{`
