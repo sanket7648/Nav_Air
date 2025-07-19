@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { baggageAPI, authUtils } from '../services/api';
+import Footer from '../components/Footer';
 
 // --- Floating Baggage Animation Component ---
 const FloatingBaggage: React.FC = () => {
@@ -104,6 +105,8 @@ export const BaggageStatusPage: React.FC = () => {
   const [dummyStep, setDummyStep] = useState(0);
   const [realTimeUpdates, setRealTimeUpdates] = useState(false);
   const isAuthenticated = authUtils.isAuthenticated();
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Dummy data animation for unauthenticated users
   useEffect(() => {
@@ -115,8 +118,17 @@ export const BaggageStatusPage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!bag) return;
+    const interval = setInterval(() => {
+      setIsRefreshing(true);
+      handleSearch();
+    }, 10000); // 10 seconds
+    return () => clearInterval(interval);
+  }, [bag]);
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError('');
     setBag(null);
     if (!searchTag) {
@@ -131,6 +143,7 @@ export const BaggageStatusPage: React.FC = () => {
       setError('Baggage not found or an error occurred.');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -171,7 +184,7 @@ export const BaggageStatusPage: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-yellow-50 to-orange-100 -z-10" />
       
       {/* The original container now just handles content layout, without its own background */}
-      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px]">
+      <div className="flex flex-col items-center py-6 sm:py-12 px-2 sm:px-0 pt-[100px] sm:pt-[100px] md:pb-[200px]">
         <div className="w-full max-w-5xl mx-auto">
         {/* Header */}
           <div className="mb-4">
@@ -242,6 +255,29 @@ export const BaggageStatusPage: React.FC = () => {
                     {isLoading ? 'Searching...' : <><Search className="w-5 h-5" /> Search</>}
                   </button>
                 </form>
+            <button
+                  type="button"
+                  onClick={() => {
+                    setIsRefreshing(true);
+                    handleSearch();
+                  }}
+                  className="ml-2 p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:scale-110 transition-transform duration-200 focus:outline-none"
+                  aria-label="Refresh status"
+            >
+                  <svg
+                    className={`w-6 h-6 ${isRefreshing ? 'animate-spin' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582M20 20v-5h-.581M5.582 9A7.978 7.978 0 014 12c0 4.418 3.582 8 8 8a7.978 7.978 0 007.418-5M18.418 15A7.978 7.978 0 0020 12c0-4.418-3.582-8-8-8a7.978 7.978 0 00-7.418 5"
+                    />
+                  </svg>
+            </button>
             <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
@@ -604,6 +640,10 @@ export const BaggageStatusPage: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Place Footer at the bottom of the page */}
+      <Footer />
     </>
   );
 };
+
+export default BaggageStatusPage;

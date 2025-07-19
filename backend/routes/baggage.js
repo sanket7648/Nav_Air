@@ -50,7 +50,8 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const { bagId, flightNumber, carouselNumber } = req.body;
     const newBagId = bagId || Math.random().toString(36).substring(2, 12).toUpperCase();
-    const timestamps = simulateStatusTimestamps();
+    const now = Date.now();
+    const timestamps = { 'Checked In': now };
     await query(
       'INSERT INTO baggage (bag_id, flight_number, carousel_number, timestamps) VALUES ($1, $2, $3, $4)',
       [newBagId, flightNumber, carouselNumber, JSON.stringify(timestamps)]
@@ -82,17 +83,54 @@ router.patch('/:bagId/status', authenticateToken, async (req, res) => {
 // GET /baggage/:bagId - Get baggage status
 router.get('/:bagId', authenticateToken, async (req, res) => {
   try {
-    const { bagId } = req.params;
+    const bagId = req.params.bagId.trim();
     const result = await query('SELECT * FROM baggage WHERE bag_id = $1', [bagId]);
-    if (result.length === 0) return res.status(404).json({ message: 'Baggage not found' });
-    const baggage = result[0];
-    const progression = getStatusProgression(baggage.timestamps);
+    const baggage = result.rows ? result.rows[0] : result[0];
+    if (!baggage) return res.status(404).json({ message: 'Baggage not found' });
+    if (typeof baggage.timestamps === 'string') {
+      baggage.timestamps = JSON.parse(baggage.timestamps);
+    }
+    if (!baggage.timestamps["Checked In"]) {
+      return res.status(500).json({ message: 'Baggage record is missing Checked In timestamp.' });
+    }
+
+    const now = Date.now();
+    const interval = 2 * 60 * 1000; // 2 minutes
+    let lastStatusIdx = 0;
+    let lastTimestamp = baggage.timestamps["Checked In"];
+
+    // Find the last completed status
+    for (let i = 1; i < STATUS_EVENTS.length; i++) {
+      if (baggage.timestamps[STATUS_EVENTS[i]]) {
+        lastStatusIdx = i;
+        lastTimestamp = baggage.timestamps[STATUS_EVENTS[i]];
+      } else {
+        break;
+      }
+    }
+
+    // If enough time has passed, add the next status
+    if (lastStatusIdx < STATUS_EVENTS.length - 1) {
+      const nextStatus = STATUS_EVENTS[lastStatusIdx + 1];
+      const nextTime = baggage.timestamps[STATUS_EVENTS[lastStatusIdx]] + interval;
+      if (now >= nextTime) {
+        baggage.timestamps[nextStatus] = nextTime;
+        // Save updated timestamps to DB
+        await query('UPDATE baggage SET timestamps = $1 WHERE bag_id = $2', [JSON.stringify(baggage.timestamps), bagId]);
+        lastStatusIdx++;
+        lastTimestamp = nextTime;
+      }
+    }
+
+    const currentStatus = STATUS_EVENTS[lastStatusIdx];
+
     res.json({
       bagId: baggage.bag_id,
       flightNumber: baggage.flight_number,
       carouselNumber: baggage.carousel_number,
       timestamps: baggage.timestamps,
-      ...progression
+      currentStatus,
+      lastTimestamp
     });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch baggage', error: err.message });
