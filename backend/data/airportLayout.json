@@ -1,0 +1,43 @@
+{
+  "nodes": {
+    "mainEntrance": { "x": 0, "y": 23, "name": "Main Entrance", "type": "entrance" },
+    "checkIn": { "x": 0, "y": 10, "name": "Check-in Counters", "type": "check-in" },
+    "security": { "x": 0, "y": 0, "name": "Security Checkpoints", "type": "security" },
+    "baggageClaim1": { "x": -45, "y": 15, "name": "Baggage Claim 1", "type": "baggage" },
+    "baggageClaim2": { "x": 45, "y": 15, "name": "Baggage Claim 2", "type": "baggage" },
+    "infoDesk": { "x": 0, "y": -2, "name": "Information Desk", "type": "info" },
+    "foodCourt": { "x": 0, "y": -25, "name": "Food Court", "type": "food" },
+    "concourseA": { "x": -40, "y": -10, "name": "Concourse A", "type": "concourse" },
+    "concourseB": { "x": 40, "y": -10, "name": "Concourse B", "type": "concourse" },
+    "gateA1": { "x": -52, "y": -28, "name": "Gate A1", "type": "gate" },
+    "gateA2": { "x": -46, "y": -28, "name": "Gate A2", "type": "gate" },
+    "gateA3": { "x": -40, "y": -28, "name": "Gate A3", "type": "gate" },
+    "gateA4": { "x": -34, "y": -28, "name": "Gate A4", "type": "gate" },
+    "gateA5": { "x": -28, "y": -28, "name": "Gate A5", "type": "gate" },
+    "gateB1": { "x": 28, "y": -28, "name": "Gate B1", "type": "gate" },
+    "gateB2": { "x": 34, "y": -28, "name": "Gate B2", "type": "gate" },
+    "gateB3": { "x": 40, "y": -28, "name": "Gate B3", "type": "gate" },
+    "gateB4": { "x": 46, "y": -28, "name": "Gate B4", "type": "gate" },
+    "gateB5": { "x": 52, "y": -28, "name": "Gate B5", "type": "gate" }
+  },
+  "edges": [
+    { "from": "mainEntrance", "to": "checkIn", "weight": 13 },
+    { "from": "checkIn", "to": "security", "weight": 10 },
+    { "from": "checkIn", "to": "baggageClaim1", "weight": 45 },
+    { "from": "checkIn", "to": "baggageClaim2", "weight": 45 },
+    { "from": "security", "to": "infoDesk", "weight": 2 },
+    { "from": "infoDesk", "to": "foodCourt", "weight": 23 },
+    { "from": "security", "to": "concourseA", "weight": 41 },
+    { "from": "security", "to": "concourseB", "weight": 41 },
+    { "from": "concourseA", "to": "gateA1", "weight": 21 },
+    { "from": "concourseA", "to": "gateA2", "weight": 18 },
+    { "from": "concourseA", "to": "gateA3", "weight": 18 },
+    { "from": "concourseA", "to": "gateA4", "weight": 18 },
+    { "from": "concourseA", "to": "gateA5", "weight": 21 },
+    { "from": "concourseB", "to": "gateB1", "weight": 21 },
+    { "from": "concourseB", "to": "gateB2", "weight": 18 },
+    { "from": "concourseB", "to": "gateB3", "weight": 18 },
+    { "from": "concourseB", "to": "gateB4", "weight": 18 },
+    { "from": "concourseB", "to": "gateB5", "weight": 21 }
+  ]
+}

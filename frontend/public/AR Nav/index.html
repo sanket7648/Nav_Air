@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern 3D Airport Floor Plan</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .label {
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: none;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/renderers/CSS2DRenderer.js"></script>
+</head>
+
+<body>
+    <div id="info">Modern 3D Airport Floor Plan Visualization<br>Use mouse to rotate, scroll to zoom, right-click to pan
+    </div>
+    <script>
+        // Debug information
+        console.log('Script started');
+
+        // Basic Three.js setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky blue background for outdoor feel
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.set(0, 30, 80); // Adjusted for larger airport view
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add CSS2D renderer for labels
+        const labelRenderer = new THREE.CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // Allow interaction with the 3D scene
+        document.body.appendChild(labelRenderer.domElement);
+
+        // Add orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2.1; // Prevent camera from going under the floor
+        controls.minDistance = 10;
+        controls.maxDistance = 150;
+
+        // Add realistic lighting system
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Softer ambient light
+        scene.add(ambientLight);
+
+        // Main directional light (sunlight through skylights/windows)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight.position.set(50, 80, 50); // Higher, broader source
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 4096; // Increased shadow quality
+        directionalLight.shadow.mapSize.height = 4096;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 200;
+        directionalLight.shadow.camera.left = -70;
+        directionalLight.shadow.camera.right = 70;
+        directionalLight.shadow.camera.top = 70;
+        directionalLight.shadow.camera.bottom = -70;
+        scene.add(directionalLight);
+
+        // Ceiling lights throughout the airport (more subtle, more numerous)
+        const ceilingLightPositions = [];
+        for (let x = -40; x <= 40; x += 10) {
+            for (let z = -25; z <= 25; z += 10) {
+                ceilingLightPositions.push([x, z]);
+            }
+        }
+
+        ceilingLightPositions.forEach(([x, z]) => {
+            // Light fixture
+            const fixtureGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 8);
+            const fixture = new THREE.Mesh(fixtureGeometry, new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.2, metalness: 0.5 }));
+            fixture.position.set(x, 3.4, z);
+            scene.add(fixture);
+
+            // Point light (softer intensity, wider reach)
+            const pointLight = new THREE.PointLight(0xffffff, 0.2, 15);
+            pointLight.position.set(x, 3.2, z);
+            scene.add(pointLight);
+        });
+
+        // Accent lighting for special areas
+        const spotLightColor = 0xffe0b2; // Warm light for accent
+        const spotLightTarget = new THREE.Object3D(); // A target for spotlights
+        scene.add(spotLightTarget);
+
+        const accentSpotLight = new THREE.SpotLight(spotLightColor, 0.6, 20, Math.PI / 7, 0.5, 1);
+        accentSpotLight.position.set(0, 10, 5);
+        accentSpotLight.target = spotLightTarget;
+        spotLightTarget.position.set(0, 0, 0); // Pointing towards center for general accent
+        scene.add(accentSpotLight);
+        accentSpotLight.castShadow = true;
+        accentSpotLight.shadow.mapSize.width = 1024;
+        accentSpotLight.shadow.mapSize.height = 1024;
+
+        // Enable shadows globally
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+
+        // Create realistic materials with procedural textures
+        const textureLoader = new THREE.TextureLoader();
+
+        // Procedural Textures
+        const createMarbleTexture = (baseColor = '#f5f5f5', veinColor = 'rgba(160, 160, 160, 0.3)') => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 512, 512);
+
+            ctx.strokeStyle = veinColor;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 30; i++) { // More veins
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * 512, Math.random() * 512);
+                ctx.bezierCurveTo(Math.random() * 512, Math.random() * 512, Math.random() * 512, Math.random() * 512, Math.random() * 512, Math.random() * 512); // Smoother veins
+                ctx.stroke();
+            }
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const createCarpetTexture = (baseColor = '#2c5aa0', speckleColor = '#1e3d6f') => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.fillStyle = speckleColor;
+            for (let i = 0; i < 500; i++) { // More speckles
+                ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+            }
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const createTileTexture = (baseColor = '#f0f0f0', groutColor = '#b0b0b0', tileSize = 64) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.strokeStyle = groutColor;
+            ctx.lineWidth = 4; // Thicker grout lines
+            for (let i = 0; i <= 256; i += tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 256);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(256, i);
+                ctx.stroke();
+            }
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const createWoodTexture = (baseColor = '#8b4513', grainColor = '#a0522d') => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 256, 256);
+
+            // Simple grain lines
+            ctx.strokeStyle = grainColor;
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 50; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, Math.random() * 256);
+                ctx.bezierCurveTo(64, Math.random() * 256, 192, Math.random() * 256, 256, Math.random() * 256);
+                ctx.stroke();
+            }
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const createConcreteTexture = (baseColor = '#cccccc', aggregateColor = '#a0a0a0') => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, 256, 256);
+
+            ctx.fillStyle = aggregateColor;
+            for (let i = 0; i < 1000; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random() * 256, Math.random() * 256, Math.random() * 1 + 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        // Create materials
+        const marbleTexture = createMarbleTexture();
+        marbleTexture.wrapS = marbleTexture.wrapT = THREE.RepeatWrapping;
+        marbleTexture.repeat.set(8, 8); // More repeats for larger area
+        const floorMaterial = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.1, metalness: 0.1 });
+
+        const carpetTexture = createCarpetTexture();
+        carpetTexture.wrapS = carpetTexture.wrapT = THREE.RepeatWrapping;
+        carpetTexture.repeat.set(12, 12);
+        const carpetMaterial = new THREE.MeshStandardMaterial({ map: carpetTexture, roughness: 0.8, metalness: 0.0 });
+
+        const tileTexture = createTileTexture();
+        tileTexture.wrapS = tileTexture.wrapT = THREE.RepeatWrapping;
+        tileTexture.repeat.set(10, 10);
+        const tileMaterial = new THREE.MeshStandardMaterial({ map: tileTexture, roughness: 0.2, metalness: 0.0 });
+
+        const concreteTexture = createConcreteTexture();
+        concreteTexture.wrapS = concreteTexture.wrapT = THREE.RepeatWrapping;
+        concreteTexture.repeat.set(10, 10);
+        const concreteMaterial = new THREE.MeshStandardMaterial({ map: concreteTexture, roughness: 0.7, metalness: 0.1 });
+
+        const woodTexture = createWoodTexture();
+        woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
+        woodTexture.repeat.set(2, 2);
+        const woodMaterial = new THREE.MeshStandardMaterial({ map: woodTexture, roughness: 0.7, metalness: 0.0 });
+
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.3 });
+        const glassMaterial = new THREE.MeshStandardMaterial({ color: 0x87ceeb, transparent: true, opacity: 0.3, roughness: 0.0, metalness: 0.1 });
+        const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x708090, roughness: 0.2, metalness: 0.8 });
+        const leatherMaterial = new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.6, metalness: 0.0 });
+        const gateMaterial = new THREE.MeshStandardMaterial({ color: 0xadd8e6, roughness: 0.3 });
+        const securityMaterial = new THREE.MeshStandardMaterial({ color: 0xffcccc, roughness: 0.3 });
+        const entranceMaterial = new THREE.MeshStandardMaterial({ color: 0xc5e1a5, roughness: 0.3 });
+        const baggageMaterial = new THREE.MeshStandardMaterial({ color: 0x404040, roughness: 0.4, metalness: 0.6 });
+        const restroomMaterial = new THREE.MeshStandardMaterial({ color: 0xe1bee7, roughness: 0.3 });
+        const pathMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, transparent: true, opacity: 0.5 });
+        const signageMaterial = new THREE.MeshStandardMaterial({ color: 0x4169e1, roughness: 0.2, metalness: 0.1 }); // Blue for signs
+        const kioskMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3 });
+        const screenMaterial = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x00ff00, emissiveIntensity: 0.1 }); // For screens
+        const concretePillarMaterial = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.6, metalness: 0.1 });
+        const foodCourtMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.4 });
+        const loungeMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.5 });
+
+
+        // Helper function to create a label
+        function createLabel(text, position, className = 'label') {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+
+            const label = new THREE.CSS2DObject(div);
+            label.position.copy(position);
+            label.position.y += 0.5; // Position slightly above the object
+            scene.add(label);
+            return label;
+        }
+
+        // Helper functions for creating realistic elements
+        function createFountain(x, z, size = 1) {
+            // Fountain base
+            const baseGeometry = new THREE.CylinderGeometry(2 * size, 2.5 * size, 0.3 * size, 32);
+            const base = new THREE.Mesh(baseGeometry, new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.3 }));
+            base.position.set(x, 0.15 * size, z);
+            base.castShadow = true;
+            base.receiveShadow = true;
+            scene.add(base);
+
+            // Water pool
+            const poolGeometry = new THREE.CylinderGeometry(1.8 * size, 1.8 * size, 0.1 * size, 32);
+            const pool = new THREE.Mesh(poolGeometry, new THREE.MeshStandardMaterial({ color: 0x4682b4, transparent: true, opacity: 0.7, roughness: 0.1 }));
+            pool.position.set(x, 0.35 * size, z);
+            pool.receiveShadow = true;
+            scene.add(pool);
+
+            // Central fountain spout
+            const spoutGeometry = new THREE.CylinderGeometry(0.1 * size, 0.1 * size, 0.5 * size, 16);
+            const spout = new THREE.Mesh(spoutGeometry, metalMaterial);
+            spout.position.set(x, 0.65 * size, z);
+            spout.castShadow = true;
+            scene.add(spout);
+
+            // Water effect (simplified particles as spheres)
+            for (let i = 0; i < 30; i++) {
+                const dropGeometry = new THREE.SphereGeometry(0.02 * size, 8, 8);
+                const drop = new THREE.Mesh(dropGeometry, new THREE.MeshStandardMaterial({ color: 0x87ceeb, transparent: true, opacity: 0.6 }));
+                drop.position.set(
+                    x + (Math.random() - 0.5) * 0.5 * size,
+                    0.4 * size + Math.random() * 0.8 * size,
+                    z + (Math.random() - 0.5) * 0.5 * size
+                );
+                scene.add(drop);
+            }
+        }
+
+        function createArtInstallation(x, z, type, size = 1) {
+            if (type === 'sculpture') {
+                // Modern abstract sculpture
+                const sculptureGroup = new THREE.Group();
+                const part1 = new THREE.Mesh(new THREE.ConeGeometry(0.5 * size, 2 * size, 12), new THREE.MeshStandardMaterial({ color: 0xcd853f, roughness: 0.2, metalness: 0.8 }));
+                part1.position.set(0, 1 * size, 0);
+                part1.rotation.z = Math.PI / 6;
+                sculptureGroup.add(part1);
+
+                const part2 = new THREE.Mesh(new THREE.TorusGeometry(0.7 * size, 0.1 * size, 16, 32), new THREE.MeshStandardMaterial({ color: 0x6a5acd, roughness: 0.2, metalness: 0.8 }));
+                part2.position.set(0, 0.8 * size, 0);
+                part2.rotation.x = Math.PI / 2;
+                sculptureGroup.add(part2);
+
+                // Base pedestal
+                const pedestalGeometry = new THREE.CylinderGeometry(0.8 * size, 0.8 * size, 0.3 * size, 16);
+                const pedestal = new THREE.Mesh(pedestalGeometry, new THREE.MeshStandardMaterial({ color: 0x2f4f4f, roughness: 0.1 }));
+                pedestal.position.set(0, 0.15 * size, 0);
+                sculptureGroup.add(pedestal);
+
+                sculptureGroup.position.set(x, 0, z);
+                sculptureGroup.castShadow = true;
+                sculptureGroup.receiveShadow = true;
+                scene.add(sculptureGroup);
+
+            } else if (type === 'painting') {
+                // Wall art frame
+                const frameGeometry = new THREE.BoxGeometry(2 * size, 1.5 * size, 0.1 * size);
+                const frame = new THREE.Mesh(frameGeometry, woodMaterial);
+                frame.position.set(x, 1.5 * size, z);
+                frame.castShadow = true;
+                frame.receiveShadow = true;
+                scene.add(frame);
+
+                // Artwork inside frame (use a slightly more complex color or pattern)
+                const artCanvas = document.createElement('canvas');
+                artCanvas.width = 128; artCanvas.height = 128;
+                const artCtx = artCanvas.getContext('2d');
+                artCtx.fillStyle = '#4169e1';
+                artCtx.fillRect(0, 0, 128, 128);
+                artCtx.fillStyle = '#ff8c00';
+                artCtx.ctx.arc(64, 64, 30, 0, Math.PI * 2);
+                artCtx.fill();
+                const artTexture = new THREE.CanvasTexture(artCanvas);
+
+                const artGeometry = new THREE.BoxGeometry(1.8 * size, 1.3 * size, 0.05 * size);
+                const art = new THREE.Mesh(artGeometry, new THREE.MeshStandardMaterial({ map: artTexture, roughness: 0.5 }));
+                art.position.set(x, 1.5 * size, z + 0.05 * size + 0.01); // Slightly in front of the frame
+                art.castShadow = true;
+                scene.add(art);
+            }
+        }
+
+        function createRealisticDoor(x, z, rotation = 0, type = 'sliding') {
+            const doorGroup = new THREE.Group();
+            // Door frame
+            const frameGeometry = new THREE.BoxGeometry(2.2, 2.8, 0.2); // Taller doors
+            const frame = new THREE.Mesh(frameGeometry, metalMaterial);
+            frame.position.set(0, 1.4, 0);
+            frame.castShadow = true;
+            frame.receiveShadow = true;
+            doorGroup.add(frame);
+
+            if (type === 'sliding') {
+                // Sliding glass door panels
+                const doorGeometry = new THREE.BoxGeometry(1.0, 2.5, 0.1);
+                const door1 = new THREE.Mesh(doorGeometry, glassMaterial);
+                door1.position.set(-0.5, 1.25, 0.05);
+                door1.castShadow = true;
+                doorGroup.add(door1);
+
+                const door2 = new THREE.Mesh(doorGeometry, glassMaterial);
+                door2.position.set(0.5, 1.25, 0.05);
+                door2.castShadow = true;
+                doorGroup.add(door2);
+            } else if (type === 'swing') {
+                // Swing door panel (single)
+                const doorGeometry = new THREE.BoxGeometry(1.5, 2.5, 0.1);
+                const door = new THREE.Mesh(doorGeometry, woodMaterial); // Wooden swing doors for offices, restrooms
+                door.position.set(0, 1.25, 0.05);
+                door.castShadow = true;
+                doorGroup.add(door);
+
+                // Handle for swing door
+                const handleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8);
+                const handle = new THREE.Mesh(handleGeometry, metalMaterial);
+                handle.position.set(0.6, 1.25, 0.1);
+                handle.rotation.z = Math.PI / 2;
+                doorGroup.add(handle);
+            }
+
+            doorGroup.position.set(x, 0, z);
+            doorGroup.rotation.y = rotation;
+            scene.add(doorGroup);
+        }
+
+        function createRealisticChair(x, z, material = leatherMaterial, rotation = 0) {
+            const chairGroup = new THREE.Group();
+            // Chair seat
+            const seatGeometry = new THREE.BoxGeometry(0.6, 0.1, 0.6);
+            const seat = new THREE.Mesh(seatGeometry, material);
+            seat.position.set(0, 0.5, 0);
+            seat.castShadow = true;
+            chairGroup.add(seat);
+
+            // Chair back
+            const backGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.1);
+            const back = new THREE.Mesh(backGeometry, material);
+            back.position.set(0, 0.9, -0.25);
+            back.castShadow = true;
+            chairGroup.add(back);
+
+            // Chair legs
+            const legGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8);
+            const positions = [[-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25]];
+            positions.forEach(([dx, dz]) => {
+                const leg = new THREE.Mesh(legGeometry, metalMaterial);
+                leg.position.set(dx, 0.25, dz);
+                chairGroup.add(leg);
+            });
+
+            // Armrests
+            const armGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.4);
+            const arm1 = new THREE.Mesh(armGeometry, material);
+            arm1.position.set(-0.35, 0.7, -0.1);
+            chairGroup.add(arm1);
+
+            const arm2 = new THREE.Mesh(armGeometry, material);
+            arm2.position.set(0.35, 0.7, -0.1);
+            chairGroup.add(arm2);
+
+            chairGroup.position.set(x, 0, z);
+            chairGroup.rotation.y = rotation;
+            scene.add(chairGroup);
+        }
+
+        function createPlant(x, z, size = 1) {
+            const plantGroup = new THREE.Group();
+            // Pot
+            const potGeometry = new THREE.CylinderGeometry(0.3 * size, 0.4 * size, 0.4 * size, 16);
+            const pot = new THREE.Mesh(potGeometry, new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8 }));
+            pot.position.set(0, 0.2 * size, 0);
+            plantGroup.add(pot);
+
+            // Plant stem
+            const stemGeometry = new THREE.CylinderGeometry(0.02 * size, 0.02 * size, 1 * size, 8);
+            const stem = new THREE.Mesh(stemGeometry, new THREE.MeshStandardMaterial({ color: 0x228b22 }));
+            stem.position.set(0, 0.9 * size, 0);
+            plantGroup.add(stem);
+
+            // Leaves (more detailed, random rotation)
+            for (let i = 0; i < 12; i++) {
+                const leafGeometry = new THREE.SphereGeometry(0.15 * size, 10, 10);
+                const leaf = new THREE.Mesh(leafGeometry, new THREE.MeshStandardMaterial({ color: 0x32cd32 }));
+                const angle = (i / 12) * Math.PI * 2;
+                leaf.position.set(
+                    Math.cos(angle) * 0.3 * size + (Math.random() - 0.5) * 0.1 * size,
+                    1.2 * size + Math.sin(i) * 0.2 * size + (Math.random() - 0.5) * 0.1 * size,
+                    Math.sin(angle) * 0.3 * size + (Math.random() - 0.5) * 0.1 * size
+                );
+                leaf.scale.set(1, 0.3, 1);
+                leaf.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                plantGroup.add(leaf);
+            }
+            plantGroup.position.set(x, 0, z);
+            plantGroup.castShadow = true;
+            plantGroup.receiveShadow = true;
+            scene.add(plantGroup);
+        }
+
+        function createSignboard(x, y, z, width, height, text, rotation = 0) {
+            const signGroup = new THREE.Group();
+
+            const signGeometry = new THREE.BoxGeometry(width, height, 0.1);
+            const signMesh = new THREE.Mesh(signGeometry, signageMaterial);
+            signMesh.position.set(0, y, 0);
+            signMesh.castShadow = true;
+            signGroup.add(signMesh);
+
+            // Add text label
+            createLabel(text, new THREE.Vector3(x, y, z + 0.05), 'label'); // Position slightly in front
+
+            signGroup.position.set(x, 0, z);
+            signGroup.rotation.y = rotation;
+            scene.add(signGroup);
+        }
+
+        function createSeatingArea(x, z, rows, seatsPerRow, spacingX = 1, spacingZ = 1, rotation = 0) {
+            const seatingGroup = new THREE.Group();
+            for (let row = 0; row < rows; row++) {
+                for (let seat = 0; seat < seatsPerRow; seat++) {
+                    const seatX = (seat - (seatsPerRow - 1) / 2) * spacingX;
+                    const seatZ = (row - (rows - 1) / 2) * spacingZ;
+                    createRealisticChair(seatX, seatZ, leatherMaterial, rotation);
+                }
+            }
+            seatingGroup.position.set(x, 0, z);
+            seatingGroup.rotation.y = rotation;
+            // Note: Chairs are added directly to the scene in createRealisticChair,
+            // so this group won't actually contain them. This is more for conceptual grouping.
+            // For true grouping, createRealisticChair would return the chairGroup and add to seatingGroup.
+            // For simplicity, sticking to existing createRealisticChair which adds to scene.
+        }
+
+        function createKiosk(x, z) {
+            const kioskGroup = new THREE.Group();
+
+            // Kiosk body
+            const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.6);
+            const body = new THREE.Mesh(bodyGeometry, kioskMaterial);
+            body.position.set(0, 0.75, 0);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            kioskGroup.add(body);
+
+            // Screen
+            const screenGeometry = new THREE.BoxGeometry(0.8, 0.6, 0.1);
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(0, 1, 0.31);
+            screen.castShadow = true;
+            kioskGroup.add(screen);
+
+            kioskGroup.position.set(x, 0, z);
+            scene.add(kioskGroup);
+        }
+
+        function createConveyorBelt(x, z, radius, segments = 32) {
+            const conveyorGroup = new THREE.Group();
+            // Belt path (torus)
+            const conveyorGeometry = new THREE.TorusGeometry(radius, 0.3, 8, segments);
+            const conveyorMesh = new THREE.Mesh(conveyorGeometry, baggageMaterial);
+            conveyorMesh.rotation.x = -Math.PI / 2;
+            conveyorMesh.position.set(0, 0.3, 0);
+            conveyorMesh.castShadow = true;
+            conveyorMesh.receiveShadow = true;
+            conveyorGroup.add(conveyorMesh);
+
+            // Platform around conveyor
+            const platformGeometry = new THREE.CylinderGeometry(radius + 1, radius + 1, 0.1, segments);
+            const platform = new THREE.Mesh(platformGeometry, tileMaterial); // Use tile material for platform
+            platform.position.set(0, 0.05, 0);
+            platform.receiveShadow = true;
+            conveyorGroup.add(platform);
+
+            // Add some luggage on the conveyors
+            for (let i = 0; i < Math.floor(segments / 4); i++) {
+                const angle = (i / Math.floor(segments / 4)) * Math.PI * 2;
+                const luggageGeometry = new THREE.BoxGeometry(0.4, 0.3, 0.6);
+                const luggage = new THREE.Mesh(luggageGeometry, new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, roughness: 0.8 }));
+                luggage.position.set(Math.cos(angle) * (radius - 0.1), 0.45, Math.sin(angle) * (radius - 0.1));
+                luggage.rotation.y = Math.random() * Math.PI * 2;
+                luggage.castShadow = true;
+                conveyorGroup.add(luggage);
+            }
+
+            conveyorGroup.position.set(x, 0, z);
+            scene.add(conveyorGroup);
+        }
+
+        // Create airport layout
+        function createAirport() {
+            // Main floor with realistic marble texture
+            const floorGeometry = new THREE.PlaneGeometry(120, 70); // Much larger floor
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Main Terminal Hall - Central area
+            const mainHallDimensions = { width: 60, depth: 30, height: 3.5 };
+            const mainHallFloor = new THREE.Mesh(new THREE.PlaneGeometry(mainHallDimensions.width, mainHallDimensions.depth), floorMaterial);
+            mainHallFloor.rotation.x = -Math.PI / 2;
+            mainHallFloor.position.set(0, 0.01, 0);
+            mainHallFloor.receiveShadow = true;
+            scene.add(mainHallFloor);
+            createLabel('Main Terminal Hall', new THREE.Vector3(0, 0, 10));
+
+            // Entrance Plaza (tiled area)
+            const entrancePlazaWidth = 40;
+            const entrancePlazaDepth = 15;
+            const entrancePlaza = new THREE.Mesh(new THREE.PlaneGeometry(entrancePlazaWidth, entrancePlazaDepth), tileMaterial);
+            entrancePlaza.rotation.x = -Math.PI / 2;
+            entrancePlaza.position.set(0, 0.01, mainHallDimensions.depth / 2 + entrancePlazaDepth / 2 - 1);
+            entrancePlaza.receiveShadow = true;
+            scene.add(entrancePlaza);
+
+            // Main Entrance with realistic doors and canopy
+            for (let i = -2; i <= 2; i++) {
+                createRealisticDoor(i * 3, mainHallDimensions.depth / 2 + entrancePlazaDepth / 2 - 2, 0, 'sliding');
+            }
+            const canopyGeometry = new THREE.BoxGeometry(entrancePlazaWidth + 5, 0.1, entrancePlazaDepth + 5);
+            const canopy = new THREE.Mesh(canopyGeometry, glassMaterial);
+            canopy.position.set(0, 3.8, mainHallDimensions.depth / 2 + entrancePlazaDepth / 2 + 1);
+            canopy.castShadow = true;
+            scene.add(canopy);
+            createLabel('Main Entrance', new THREE.Vector3(0, 0, mainHallDimensions.depth / 2 + entrancePlazaDepth / 2 + 5));
+
+            // Taxi Stand / Drop-off Zone
+            const taxiZoneWidth = entrancePlazaWidth + 20;
+            const taxiZoneDepth = 10;
+            const taxiZone = new THREE.Mesh(new THREE.PlaneGeometry(taxiZoneWidth, taxiZoneDepth), concreteMaterial);
+            taxiZone.rotation.x = -Math.PI / 2;
+            taxiZone.position.set(0, 0.02, mainHallDimensions.depth / 2 + entrancePlazaDepth + taxiZoneDepth / 2 - 1);
+            taxiZone.receiveShadow = true;
+            scene.add(taxiZone);
+            createLabel('Taxi / Drop-off', new THREE.Vector3(0, 0, mainHallDimensions.depth / 2 + entrancePlazaDepth + taxiZoneDepth / 2 + 3));
+
+            // Check-in Area
+            const checkinAreaZ = mainHallDimensions.depth / 2 - 5;
+            for (let i = 0; i < 15; i++) { // More check-in counters
+                const counterX = -mainHallDimensions.width / 2 + 5 + i * 4;
+                const counterY = 0.6;
+                const counterZ = checkinAreaZ;
+
+                const counterGroup = new THREE.Group();
+
+                // Counter base
+                const counterGeometry = new THREE.BoxGeometry(3.5, 1.2, 1.5);
+                const counter = new THREE.Mesh(counterGeometry, woodMaterial);
+                counter.position.set(0, counterY, 0);
+                counter.castShadow = true;
+                counter.receiveShadow = true;
+                counterGroup.add(counter);
+
+                // Counter top
+                const topGeometry = new THREE.BoxGeometry(3.7, 0.1, 1.8);
+                const top = new THREE.Mesh(topGeometry, new THREE.MeshStandardMaterial({ color: 0x2f4f4f, roughness: 0.1, metalness: 0.2 }));
+                top.position.set(0, counterY + 0.65, 0);
+                top.castShadow = true;
+                top.receiveShadow = true;
+                counterGroup.add(top);
+
+                // Computer monitor
+                const monitorGeometry = new THREE.BoxGeometry(0.5, 0.4, 0.1);
+                const monitor = new THREE.Mesh(monitorGeometry, new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x00ff00, emissiveIntensity: 0.05 }));
+                monitor.position.set(0, counterY + 0.9, -0.6);
+                monitor.castShadow = true;
+                counterGroup.add(monitor);
+
+                // Kiosk for self check-in next to each counter
+                createKiosk(counterX + 1.5, counterZ + 2);
+
+                counterGroup.position.set(counterX, 0, counterZ);
+                scene.add(counterGroup);
+            }
+            createLabel('Check-in Counters', new THREE.Vector3(0, 0, checkinAreaZ + 3));
+
+            // Security Checkpoints
+            const securityAreaZ = checkinAreaZ - 10;
+            const securityWidth = 40;
+            const securityDepth = 8;
+            const securityFloor = new THREE.Mesh(new THREE.PlaneGeometry(securityWidth, securityDepth), tileMaterial);
+            securityFloor.rotation.x = -Math.PI / 2;
+            securityFloor.position.set(0, 0.01, securityAreaZ);
+            securityFloor.receiveShadow = true;
+            scene.add(securityFloor);
+            createLabel('Security Checkpoints', new THREE.Vector3(0, 0, securityAreaZ + 3));
+
+            for (let i = 0; i < 4; i++) { // Multiple security lanes
+                const laneX = -15 + i * 10;
+
+                // X-ray machine
+                const xrayGeometry = new THREE.BoxGeometry(3, 1.2, 1.8);
+                const xray = new THREE.Mesh(xrayGeometry, new THREE.MeshStandardMaterial({ color: 0x696969, roughness: 0.3, metalness: 0.1 }));
+                xray.position.set(laneX - 1.5, 0.6, securityAreaZ - 1);
+                xray.castShadow = true;
+                xray.receiveShadow = true;
+                scene.add(xray);
+
+                // Metal detector archway
+                const detectorGeometry = new THREE.BoxGeometry(0.2, 2.5, 1.5);
+                const detectorLeft = new THREE.Mesh(detectorGeometry, metalMaterial);
+                detectorLeft.position.set(laneX, 1.25, securityAreaZ + 0.5);
+                detectorLeft.castShadow = true;
+                scene.add(detectorLeft);
+
+                const detectorRight = new THREE.Mesh(detectorGeometry, metalMaterial);
+                detectorRight.position.set(laneX + 1.5, 1.25, securityAreaZ + 0.5);
+                detectorRight.castShadow = true;
+                scene.add(detectorRight);
+
+                const detectorTop = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 1.5), metalMaterial);
+                detectorTop.position.set(laneX + 0.75, 2.4, securityAreaZ + 0.5);
+                detectorTop.castShadow = true;
+                scene.add(detectorTop);
+
+                // Queue barriers
+                const barrierHeight = 0.9;
+                const barrierRadius = 0.05;
+                const barrierMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.5 });
+                const ropeMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.8 });
+
+                for (let j = 0; j < 3; j++) {
+                    const post1 = new THREE.Mesh(new THREE.CylinderGeometry(barrierRadius, barrierRadius, barrierHeight, 8), barrierMaterial);
+                    post1.position.set(laneX - 2.5, barrierHeight / 2, securityAreaZ + 2.5 - j * 1.5);
+                    post1.castShadow = true;
+                    scene.add(post1);
+
+                    const post2 = new THREE.Mesh(new THREE.CylinderGeometry(barrierRadius, barrierRadius, barrierHeight, 8), barrierMaterial);
+                    post2.position.set(laneX - 0.5, barrierHeight / 2, securityAreaZ + 2.5 - j * 1.5);
+                    post2.castShadow = true;
+                    scene.add(post2);
+
+                    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2, 8), ropeMaterial);
+                    rope.rotation.z = Math.PI / 2;
+                    rope.position.set(laneX - 1.5, barrierHeight - 0.1, securityAreaZ + 2.5 - j * 1.5);
+                    scene.add(rope);
+                }
+            }
+
+            // Concourses / Piers (A and B)
+            const concourseAWingWidth = 30;
+            const concourseAWingDepth = 40;
+            const concourseAX = -mainHallDimensions.width / 2 - concourseAWingWidth / 2 - 5;
+            const concourseAZ = securityAreaZ - 10; // Connects from security
+
+            const concourseAFloor = new THREE.Mesh(new THREE.PlaneGeometry(concourseAWingWidth, concourseAWingDepth), carpetMaterial);
+            concourseAFloor.rotation.x = -Math.PI / 2;
+            concourseAFloor.position.set(concourseAX, 0.01, concourseAZ);
+            concourseAFloor.receiveShadow = true;
+            scene.add(concourseAFloor);
+            createLabel('Concourse A (Gates A1-A10)', new THREE.Vector3(concourseAX, 0, concourseAZ + 15));
+
+            const concourseBWingWidth = 30;
+            const concourseBWingDepth = 40;
+            const concourseBX = mainHallDimensions.width / 2 + concourseBWingWidth / 2 + 5;
+            const concourseBZ = securityAreaZ - 10; // Connects from security
+
+            const concourseBFloor = new THREE.Mesh(new THREE.PlaneGeometry(concourseBWingWidth, concourseBWingDepth), carpetMaterial);
+            concourseBFloor.rotation.x = -Math.PI / 2;
+            concourseBFloor.position.set(concourseBX, 0.01, concourseBZ);
+            concourseBFloor.receiveShadow = true;
+            scene.add(concourseBFloor);
+            createLabel('Concourse B (Gates B1-B10)', new THREE.Vector3(concourseBX, 0, concourseBZ + 15));
+
+            // Connect security to concourses
+            const securityToConcourseAGeom = new THREE.BoxGeometry(5, 0.1, 10);
+            const securityToConcourseA = new THREE.Mesh(securityToConcourseAGeom, floorMaterial);
+            securityToConcourseA.rotation.x = -Math.PI / 2;
+            securityToConcourseA.position.set(concourseAX + concourseAWingWidth / 2 - 2.5, 0.01, securityAreaZ - 5);
+            scene.add(securityToConcourseA);
+
+            const securityToConcourseBGeom = new THREE.BoxGeometry(5, 0.1, 10);
+            const securityToConcourseB = new THREE.Mesh(securityToConcourseBGeom, floorMaterial);
+            securityToConcourseB.rotation.x = -Math.PI / 2;
+            securityToConcourseB.position.set(concourseBX - concourseBWingWidth / 2 + 2.5, 0.01, securityAreaZ - 5);
+            scene.add(securityToConcourseB);
+
+            // Gates in Concourse A (A1-A10)
+            for (let i = 0; i < 10; i++) {
+                const gateX = concourseAX - concourseAWingWidth / 2 + 3 + (i % 5) * 6;
+                const gateZ = concourseAZ - 15 - (Math.floor(i / 5) * 15); // Two rows of gates
+
+                // Gate counter/desk
+                const gateCounter = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 1), woodMaterial);
+                gateCounter.position.set(gateX, 0.6, gateZ + 2);
+                gateCounter.castShadow = true;
+                gateCounter.receiveShadow = true;
+                scene.add(gateCounter);
+
+                // Gate door to aircraft
+                createRealisticDoor(gateX, gateZ, 0, 'sliding');
+
+                // Boarding bridge indication (simple box)
+                const bridgeGeometry = new THREE.BoxGeometry(2.5, 0.3, 5);
+                const bridge = new THREE.Mesh(bridgeGeometry, metalMaterial);
+                bridge.position.set(gateX, 0.15, gateZ - 3.5);
+                bridge.castShadow = true;
+                bridge.receiveShadow = true;
+                scene.add(bridge);
+
+                // Gate seating area
+                createSeatingArea(gateX, gateZ + 5, 3, 4, 1.2, 1.5, Math.PI); // Facing the gate
+
+                createLabel(`Gate A${i + 1}`, new THREE.Vector3(gateX, 0, gateZ - 0.5));
+            }
+
+            // Gates in Concourse B (B1-B10)
+            for (let i = 0; i < 10; i++) {
+                const gateX = concourseBX - concourseBWingWidth / 2 + 3 + (i % 5) * 6;
+                const gateZ = concourseBZ - 15 - (Math.floor(i / 5) * 15);
+
+                const gateCounter = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 1), woodMaterial);
+                gateCounter.position.set(gateX, 0.6, gateZ + 2);
+                gateCounter.castShadow = true;
+                gateCounter.receiveShadow = true;
+                scene.add(gateCounter);
+
+                createRealisticDoor(gateX, gateZ, 0, 'sliding');
+
+                const bridgeGeometry = new THREE.BoxGeometry(2.5, 0.3, 5);
+                const bridge = new THREE.Mesh(bridgeGeometry, metalMaterial);
+                bridge.position.set(gateX, 0.15, gateZ - 3.5);
+                bridge.castShadow = true;
+                bridge.receiveShadow = true;
+                scene.add(bridge);
+
+                createSeatingArea(gateX, gateZ + 5, 3, 4, 1.2, 1.5, Math.PI); // Facing the gate
+
+                createLabel(`Gate B${i + 1}`, new THREE.Vector3(gateX, 0, gateZ - 0.5));
+            }
+
+            // Baggage Claim Area
+            const baggageClaimZ = mainHallDimensions.depth / 2 - 5; // Near check-in, but separate
+            const baggageClaimX = -mainHallDimensions.width / 2 + 15;
+            createConveyorBelt(baggageClaimX, baggageClaimZ, 4);
+            createLabel('Baggage Claim 1', new THREE.Vector3(baggageClaimX, 0, baggageClaimZ + 6));
+
+            const baggageClaim2X = mainHallDimensions.width / 2 - 15;
+            createConveyorBelt(baggageClaim2X, baggageClaimZ, 4);
+            createLabel('Baggage Claim 2', new THREE.Vector3(baggageClaim2X, 0, baggageClaimZ + 6));
+
+
+            // Restrooms
+            createRealisticDoor(-25, -15, 0, 'swing'); // Restroom 1 door
+            const restroom1Walls = new THREE.Group();
+            restroom1Walls.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.5, 0.2), restroomMaterial).translateX(-25).translateZ(-18)); // Back
+            restroom1Walls.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6), restroomMaterial).translateX(-28).translateZ(-15)); // Left
+            restroom1Walls.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6), restroomMaterial).translateX(-22).translateZ(-15)); // Right
+            scene.add(restroom1Walls);
+            createLabel('Restrooms', new THREE.Vector3(-25, 0, -17));
+
+            createRealisticDoor(25, -15, 0, 'swing'); // Restroom 2 door
+            const restroom2Walls = new THREE.Group();
+            restroom2Walls.add(new THREE.Mesh(new THREE.BoxGeometry(6, 2.5, 0.2), restroomMaterial).translateX(25).translateZ(-18)); // Back
+            restroom2Walls.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6), restroomMaterial).translateX(22).translateZ(-15)); // Left
+            restroom2Walls.add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6), restroomMaterial).translateX(28).translateZ(-15)); // Right
+            scene.add(restroom2Walls);
+            createLabel('Restrooms', new THREE.Vector3(25, 0, -17));
+
+            // Airport Shops & Cafes
+            const shopDepth = 8;
+            const shopHeight = 2.5;
+
+            // Coffee Shop
+            const coffeeShop = new THREE.Mesh(new THREE.BoxGeometry(8, shopHeight, shopDepth), woodMaterial);
+            coffeeShop.position.set(-mainHallDimensions.width / 2 + 10, shopHeight / 2, mainHallDimensions.depth / 2 - 8);
+            coffeeShop.castShadow = true;
+            coffeeShop.receiveShadow = true;
+            scene.add(coffeeShop);
+            createLabel('Coffee Shop', new THREE.Vector3(-mainHallDimensions.width / 2 + 10, 0, mainHallDimensions.depth / 2 - 5));
+            createRealisticDoor(-mainHallDimensions.width / 2 + 10, mainHallDimensions.depth / 2 - 8 + 4, Math.PI / 2, 'sliding');
+
+            // Duty-Free Shop
+            const dutyFreeShop = new THREE.Mesh(new THREE.BoxGeometry(12, shopHeight, shopDepth), new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.3 }));
+            dutyFreeShop.position.set(mainHallDimensions.width / 2 - 10, shopHeight / 2, mainHallDimensions.depth / 2 - 8);
+            dutyFreeShop.castShadow = true;
+            dutyFreeShop.receiveShadow = true;
+            scene.add(dutyFreeShop);
+            createLabel('Duty-Free Shop', new THREE.Vector3(mainHallDimensions.width / 2 - 10, 0, mainHallDimensions.depth / 2 - 5));
+            createRealisticDoor(mainHallDimensions.width / 2 - 10, mainHallDimensions.depth / 2 - 8 + 4, Math.PI / 2, 'sliding');
+
+            // Food Court Area
+            const foodCourtWidth = 40;
+            const foodCourtDepth = 15;
+            const foodCourtFloor = new THREE.Mesh(new THREE.PlaneGeometry(foodCourtWidth, foodCourtDepth), foodCourtMaterial);
+            foodCourtFloor.rotation.x = -Math.PI / 2;
+            foodCourtFloor.position.set(0, 0.01, -mainHallDimensions.depth / 2 - foodCourtDepth / 2 + 5);
+            foodCourtFloor.receiveShadow = true;
+            scene.add(foodCourtFloor);
+            createLabel('Food Court', new THREE.Vector3(0, 0, -mainHallDimensions.depth / 2 - foodCourtDepth / 2 + 8));
+
+            // Food court seating
+            createSeatingArea(-10, -mainHallDimensions.depth / 2 - foodCourtDepth / 2 + 10, 2, 5, 2, 1.5, 0);
+            createSeatingArea(10, -mainHallDimensions.depth / 2 - foodCourtDepth / 2 + 10, 2, 5, 2, 1.5, 0);
+
+            // Information desk (central)
+            const infoDesk = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 1.2, 32), new THREE.MeshStandardMaterial({ color: 0x4169e1, roughness: 0.2, metalness: 0.1 }));
+            infoDesk.position.set(0, 0.6, -2);
+            infoDesk.castShadow = true;
+            infoDesk.receiveShadow = true;
+            scene.add(infoDesk);
+            createLabel('Information Desk', new THREE.Vector3(0, 0, -0.5));
+
+            // Central fountain (main hall)
+            createFountain(0, 8, 1.5); // Larger fountain
+            createLabel('Central Fountain', new THREE.Vector3(0, 0, 9));
+
+            // Art installations
+            createArtInstallation(-20, 10, 'sculpture', 1.2);
+            createArtInstallation(20, 10, 'sculpture', 1.2);
+            createLabel('Art Exhibit', new THREE.Vector3(-20, 0, 11));
+            createLabel('Art Exhibit', new THREE.Vector3(20, 0, 11));
+
+            // Plants throughout the airport
+            createPlant(-15, 12);
+            createPlant(15, 12);
+            createPlant(-30, -5);
+            createPlant(30, -5);
+            createPlant(0, -20);
+
+            // Large window sections on outer walls of concourses
+            const windowHeight = 2.5;
+            const windowWidth = 8;
+            const windowMaterial = new THREE.MeshStandardMaterial({ color: 0xadd8e6, transparent: true, opacity: 0.2, roughness: 0.0, metalness: 0.1 });
+
+            for (let i = 0; i < 4; i++) { // Windows along Concourse A outer wall
+                const window = new THREE.Mesh(new THREE.BoxGeometry(windowWidth, windowHeight, 0.1), windowMaterial);
+                window.position.set(concourseAX - concourseAWingWidth / 2 - 0.1, windowHeight / 2 + 0.5, concourseAZ - 15 + i * 10);
+                window.rotation.y = Math.PI / 2;
+                window.castShadow = true;
+                window.receiveShadow = true;
+                scene.add(window);
+            }
+            for (let i = 0; i < 4; i++) { // Windows along Concourse B outer wall
+                const window = new THREE.Mesh(new THREE.BoxGeometry(windowWidth, windowHeight, 0.1), windowMaterial);
+                window.position.set(concourseBX + concourseBWingWidth / 2 + 0.1, windowHeight / 2 + 0.5, concourseBZ - 15 + i * 10);
+                window.rotation.y = -Math.PI / 2;
+                window.castShadow = true;
+                window.receiveShadow = true;
+                scene.add(window);
+            }
+
+            // Moving Walkways (representing a long connection)
+            const walkwayLength = 20;
+            const walkwayWidth = 2;
+            const walkwayHeight = 0.1;
+            const walkwayMaterial = new THREE.MeshStandardMaterial({ color: 0x696969, roughness: 0.5, metalness: 0.3 });
+
+            const movingWalkway1 = new THREE.Mesh(new THREE.BoxGeometry(walkwayLength, walkwayHeight, walkwayWidth), walkwayMaterial);
+            movingWalkway1.position.set(0, 0.05, -28); // Connecting main hall to concourse area
+            movingWalkway1.receiveShadow = true;
+            scene.add(movingWalkway1);
+            createLabel('Moving Walkway', new THREE.Vector3(0, 0, -29));
+
+            // Elevated walkways/bridges (simplified, as they're not fully traversable in this model)
+            const elevatedWalkwayHeight = 4;
+            const elevatedWalkwayLength = 20;
+            const elevatedWalkwayWidth = 5;
+            const elevatedWalkwayMaterial = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.4 });
+
+            const bridge1 = new THREE.Mesh(new THREE.BoxGeometry(elevatedWalkwayLength, 0.2, elevatedWalkwayWidth), elevatedWalkwayMaterial);
+            bridge1.position.set(0, elevatedWalkwayHeight, -45);
+            bridge1.rotation.y = Math.PI / 2;
+            bridge1.castShadow = true;
+            bridge1.receiveShadow = true;
+            scene.add(bridge1);
+            createLabel('Connecting Bridge', new THREE.Vector3(0, elevatedWalkwayHeight + 0.5, -45));
+
+            // Escalators (simplified as inclined planes with steps)
+            const escalatorWidth = 3;
+            const escalatorLength = 5;
+            const escalatorRise = 2;
+            const escalatorStepsMaterial = new THREE.MeshStandardMaterial({ color: 0x404040, roughness: 0.6 });
+            const escalatorSideMaterial = new THREE.MeshStandardMaterial({ color: 0xa9a9a9, roughness: 0.3, metalness: 0.5 });
+
+            const createEscalator = (x, z, rotation) => {
+                const escalatorGroup = new THREE.Group();
+                const escalatorGeometry = new THREE.BoxGeometry(escalatorWidth, 0.1, escalatorLength);
+                const escalatorMesh = new THREE.Mesh(escalatorGeometry, escalatorStepsMaterial);
+                escalatorMesh.position.set(0, escalatorRise / 2, 0);
+                escalatorMesh.rotation.x = -Math.atan(escalatorRise / escalatorLength); // Angle based on rise/length
+                escalatorMesh.castShadow = true;
+                escalatorMesh.receiveShadow = true;
+                escalatorGroup.add(escalatorMesh);
+
+                // Sides
+                const sideGeometry = new THREE.BoxGeometry(0.1, escalatorRise, escalatorLength);
+                const side1 = new THREE.Mesh(sideGeometry, escalatorSideMaterial);
+                side1.position.set(escalatorWidth / 2 + 0.05, escalatorRise / 2, 0);
+                side1.castShadow = true;
+                side1.receiveShadow = true;
+                escalatorGroup.add(side1);
+
+                const side2 = new THREE.Mesh(sideGeometry, escalatorSideMaterial);
+                side2.position.set(-(escalatorWidth / 2 + 0.05), escalatorRise / 2, 0);
+                side2.castShadow = true;
+                side2.receiveShadow = true;
+                escalatorGroup.add(side2);
+
+                escalatorGroup.position.set(x, 0.05, z);
+                escalatorGroup.rotation.y = rotation;
+                scene.add(escalatorGroup);
+            };
+
+            createEscalator(-35, 5, 0); // To an imaginary upper floor
+            createLabel('Escalators', new THREE.Vector3(-35, 0, 7));
+
+            createEscalator(35, 5, 0); // To an imaginary upper floor
+            createLabel('Escalators', new THREE.Vector3(35, 0, 7));
+
+
+            // Airport Lounge
+            const loungeWidth = 20;
+            const loungeDepth = 15;
+            const loungeX = -mainHallDimensions.width / 2 + loungeWidth / 2 + 5;
+            const loungeZ = -mainHallDimensions.depth / 2 + loungeDepth / 2 + 5;
+
+            const loungeFloor = new THREE.Mesh(new THREE.PlaneGeometry(loungeWidth, loungeDepth), carpetMaterial);
+            loungeFloor.rotation.x = -Math.PI / 2;
+            loungeFloor.position.set(loungeX, 0.01, loungeZ);
+            loungeFloor.receiveShadow = true;
+            scene.add(loungeFloor);
+
+            // Lounge walls
+            const loungeWallHeight = 2.5;
+            const loungeWallThickness = 0.2;
+            const loungeWalls = new THREE.Group();
+            loungeWalls.add(new THREE.Mesh(new THREE.BoxGeometry(loungeWidth, loungeWallHeight, loungeWallThickness), wallMaterial).translateX(loungeX).translateY(loungeWallHeight / 2).translateZ(loungeZ - loungeDepth / 2 - loungeWallThickness / 2)); // Back wall
+            loungeWalls.add(new THREE.Mesh(new THREE.BoxGeometry(loungeWidth, loungeWallHeight, loungeWallThickness), wallMaterial).translateX(loungeX).translateY(loungeWallHeight / 2).translateZ(loungeZ + loungeDepth / 2 + loungeWallThickness / 2)); // Front wall
+            loungeWalls.add(new THREE.Mesh(new THREE.BoxGeometry(loungeWallThickness, loungeWallHeight, loungeDepth), wallMaterial).translateX(loungeX - loungeWidth / 2 - loungeWallThickness / 2).translateY(loungeWallHeight / 2).translateZ(loungeZ)); // Left wall
+            scene.add(loungeWalls);
+
+            createRealisticDoor(loungeX + loungeWidth / 2 - 1, loungeZ, Math.PI / 2, 'swing'); // Lounge entrance
+            createLabel('Airport Lounge', new THREE.Vector3(loungeX, 0, loungeZ));
+
+            // Lounge seating
+            createSeatingArea(loungeX - 5, loungeZ, 2, 3, 2, 2, 0);
+            createSeatingArea(loungeX + 5, loungeZ, 2, 3, 2, 2, 0);
+
+            // Main support pillars (more robust)
+            const mainPillarGeometry = new THREE.CylinderGeometry(0.8, 0.8, 3.5, 16);
+            const mainPillarMaterial = new THREE.MeshStandardMaterial({ color: 0xd3d3d3, roughness: 0.2, metalness: 0.1 });
+            const mainPillarPositions = [
+                [-45, 0], [-15, 0], [15, 0], [45, 0],
+                [-45, -25], [-15, -25], [15, -25], [45, -25],
+                [-45, 25], [-15, 25], [15, 25], [45, 25]
+            ];
+            mainPillarPositions.forEach(([x, z]) => {
+                const pillar = new THREE.Mesh(mainPillarGeometry, mainPillarMaterial);
+                pillar.position.set(x, 1.75, z);
+                pillar.castShadow = true;
+                pillar.receiveShadow = true;
+                scene.add(pillar);
+            });
+
+            // Airport Walls (outer perimeter)
+            const perimeterWallHeight = 4;
+            const perimeterWallThickness = 0.3;
+
+            // Back wall
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(120, perimeterWallHeight, perimeterWallThickness), wallMaterial);
+            backWall.position.set(0, perimeterWallHeight / 2, -35 - perimeterWallThickness / 2);
+            backWall.castShadow = true;
+            backWall.receiveShadow = true;
+            scene.add(backWall);
+
+            // Front wall (partially open for entrance)
+            const frontWallLeft = new THREE.Mesh(new THREE.BoxGeometry(50, perimeterWallHeight, perimeterWallThickness), wallMaterial);
+            frontWallLeft.position.set(-35, perimeterWallHeight / 2, 35 + perimeterWallThickness / 2);
+            frontWallLeft.castShadow = true;
+            frontWallLeft.receiveShadow = true;
+            scene.add(frontWallLeft);
+
+            const frontWallRight = new THREE.Mesh(new THREE.BoxGeometry(50, perimeterWallHeight, perimeterWallThickness), wallMaterial);
+            frontWallRight.position.set(35, perimeterWallHeight / 2, 35 + perimeterWallThickness / 2);
+            frontWallRight.castShadow = true;
+            frontWallRight.receiveShadow = true;
+            scene.add(frontWallRight);
+
+            // Side walls
+            const sideWallLength = 70 + 2 * perimeterWallThickness;
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(perimeterWallThickness, perimeterWallHeight, sideWallLength), wallMaterial);
+            leftWall.position.set(-60 - perimeterWallThickness / 2, perimeterWallHeight / 2, 0);
+            leftWall.castShadow = true;
+            leftWall.receiveShadow = true;
+            scene.add(leftWall);
+
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(perimeterWallThickness, perimeterWallHeight, sideWallLength), wallMaterial);
+            rightWall.position.set(60 + perimeterWallThickness / 2, perimeterWallHeight / 2, 0);
+            rightWall.castShadow = true;
+            rightWall.receiveShadow = true;
+            scene.add(rightWall);
+
+            // Ceiling for the entire airport
+            const ceilingGeometry = new THREE.PlaneGeometry(120, 70);
+            ceiling = new THREE.Mesh(ceilingGeometry, new THREE.MeshStandardMaterial({ color: 0xf8f8f8, side: THREE.DoubleSide }));
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.y = 4.1
+            ceiling.receiveShadow = true;
+            scene.add(ceiling);
+
+            // Navigation path from entrance to a specific gate (e.g., A5)
+            // Path: Entrance -> Main Hall -> Security -> Concourse A -> Gate A5
+            /*const pathPoints = [
+                new THREE.Vector3(0, 0.15, mainHallDimensions.depth / 2 + entrancePlazaDepth - 2), // Near entrance doors
+                new THREE.Vector3(0, 0.15, securityAreaZ + 4), // To security
+                new THREE.Vector3(concourseAX + concourseAWingWidth / 2 - 2.5, 0.15, securityAreaZ + 4), // Turn towards Concourse A
+                new THREE.Vector3(concourseAX + concourseAWingWidth / 2 - 2.5, 0.15, concourseAZ + 10), // Into Concourse A
+                new THREE.Vector3(concourseAX - concourseAWingWidth / 2 + 3 + (4 % 5) * 6, 0.15, concourseAZ + 5 - (Math.floor(4 / 5) * 15)) // To Gate A5 (index 4)
+            ];
+
+            const pathTubeGeometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pathPoints), 64, 0.2, 8, false);
+            const pathTube = new THREE.Mesh(pathTubeGeometry, pathMaterial);
+            pathTube.receiveShadow = true;
+            scene.add(pathTube);
+            createLabel('Path to Gate A5', new THREE.Vector3(pathPoints[pathPoints.length - 1].x, 0.5, pathPoints[pathPoints.length - 1].z + 2));
+            */
+
+            // Signboards for key areas
+            createSignboard(0, 3, mainHallDimensions.depth / 2 + 10, 5, 1, 'Arrivals / Departures', Math.PI);
+            createSignboard(-30, 3, mainHallDimensions.depth / 2 - 20, 6, 1.2, 'Terminal A Gates A1-A10', Math.PI / 2);
+            createSignboard(30, 3, mainHallDimensions.depth / 2 - 20, 6, 1.2, 'Terminal B Gates B1-B10', -Math.PI / 2);
+            createSignboard(0, 3, -mainHallDimensions.depth / 2 - foodCourtDepth + 10, 4, 1, 'Food & Shops', 0);
+            createSignboard(loungeX + loungeWidth / 2 - 1, 3, loungeZ + 2, 3, 1, 'Lounge', Math.PI / 2);
+
+
+        }
+
+        // Store the initial camera and target positions
+        const initialCameraPosition = camera.position.clone();
+        const initialTargetPosition = controls.target.clone();
+
+        /*let currentPathObject = null; // Variable to hold the current path
+
+        function drawNavigationPath(routePoints) {
+            // Remove the previous path if it exists
+            if (currentPathObject) {
+                scene.remove(currentPathObject);
+                currentPathObject = null;
+            }
+
+            if (!routePoints || routePoints.length < 2) {
+                renderer.render(scene, camera); // Ensure scene updates even when path is cleared
+                return;
+            }
+
+            const pathMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 1.5 });
+
+            const points = routePoints.map(p => new THREE.Vector3(p.x, 0.2, p.y));
+            const pathCurve = new THREE.CatmullRomCurve3(points);
+            const pathTubeGeometry = new THREE.TubeGeometry(pathCurve, 64, 0.3, 8, false);
+            const pathTube = new THREE.Mesh(pathTubeGeometry, pathMaterial);
+
+            currentPathObject = pathTube;
+            scene.add(currentPathObject);
+        }
+
+        // NEW: Smart camera function to focus on the route
+        function focusOnRoute(routePoints) {
+            if (!routePoints || routePoints.length < 1) return;
+
+            const points = routePoints.map(p => new THREE.Vector3(p.x, 0, p.y));
+            const box = new THREE.Box3().setFromPoints(points);
+            const center = new THREE.Vector3();
+            const size = new THREE.Vector3();
+            box.getCenter(center);
+            box.getSize(size);
+
+            const maxDim = Math.max(size.x, size.z);
+            const fov = camera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+            cameraZ *= 1.8; // Add some padding to see the surroundings
+
+            const newPosition = {
+                x: center.x,
+                y: Math.max(cameraZ / 2, 15), // Ensure camera isn't too low
+                z: center.z + cameraZ
+            };
+
+            // Use GSAP to animate the camera and controls target smoothly
+            gsap.to(camera.position, {
+                duration: 1.5,
+                ...newPosition,
+                ease: "power2.inOut"
+            });
+            gsap.to(controls.target, {
+                duration: 1.5,
+                x: center.x,
+                y: center.y,
+                z: center.z,
+                ease: "power2.inOut",
+                onUpdate: () => controls.update() // IMPORTANT: update controls during animation
+            });
+        }
+
+        function resetCameraView() {
+            gsap.to(camera.position, {
+                duration: 1.5,
+                x: initialCameraPosition.x,
+                y: initialCameraPosition.y,
+                z: initialCameraPosition.z,
+                ease: "power2.inOut"
+            });
+            gsap.to(controls.target, {
+                duration: 1.5,
+                x: initialTargetPosition.x,
+                y: initialTargetPosition.y,
+                z: initialTargetPosition.z,
+                ease: "power2.inOut",
+                onUpdate: () => controls.update()
+            });
+        }
+
+        // Listen for messages from the parent React app
+        window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin) return;
+
+            const data = event.data;
+            if (data.type === 'NAVIGATE_ROUTE') {
+                drawNavigationPath(data.payload);
+                focusOnRoute(data.payload); // Focus camera when drawing the route
+            }
+            if (data.type === 'RESET_VIEW') {
+                resetCameraView();
+            }
+        });
+
+        // Create the airport
+        createAirport();
+        */
+
+
+
+        // This function will be called by the React parent to draw a route
+        /*function drawNavigationPath(routePoints) {
+            // Remove the previous path if it exists
+            if (currentPathObject) {
+                scene.remove(currentPathObject);
+                currentPathObject = null;
+            }
+
+            if (!routePoints || routePoints.length < 2) {
+                return; // Not enough points to draw a path
+            }
+
+            // The path material from your original file
+            const pathMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, transparent: true, opacity: 0.7, emissive: 0xffff00, emissiveIntensity: 1 });
+
+            const points = routePoints.map(p => new THREE.Vector3(p.x, 0.15, p.y));
+            const pathCurve = new THREE.CatmullRomCurve3(points);
+            const pathTubeGeometry = new THREE.TubeGeometry(pathCurve, 64, 0.2, 8, false);
+            const pathTube = new THREE.Mesh(pathTubeGeometry, pathMaterial);
+
+            currentPathObject = pathTube;
+            scene.add(currentPathObject);
+        }
+
+        // Listen for messages from the parent React app
+        window.addEventListener('message', function (event) {
+            // A basic security check
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+
+            const data = event.data;
+            if (data.type === 'NAVIGATE_ROUTE') {
+                drawNavigationPath(data.payload);
+            }
+        });
+
+        // --- NEW CODE ENDS HERE ---
+        */
+
+        // --- START: PASTE THIS NEW CODE BLOCK AROUND LINE 800 ---
+        let ceiling;
+        let currentPathObject = null;
+        let isTouring = false;
+        let animationFrameId; // To control the animation loop
+
+        function drawNavigationPath(routePoints, makeVisible = true) {
+            if (currentPathObject) {
+                scene.remove(currentPathObject);
+                currentPathObject = null;
+            }
+
+            if (!routePoints || routePoints.length < 2) {
+                if (ceiling) ceiling.visible = true; // Show roof if path is cleared
+                return;
+            }
+
+            const pathMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffff00,
+                emissive: 0xffff00,
+                emissiveIntensity: 1.5
+            });
+
+            const points = routePoints.map(p => new THREE.Vector3(p.x, 0.1, p.y));
+            const pathCurve = new THREE.CatmullRomCurve3(points);
+            const pathTubeGeometry = new THREE.TubeGeometry(pathCurve, 100, 0.2, 8, false);
+            const pathTube = new THREE.Mesh(pathTubeGeometry, pathMaterial);
+            currentPathObject = pathTube;
+            currentPathObject.visible = makeVisible;
+            scene.add(currentPathObject);
+        }
+
+        // THIS IS THE NEW ANIMATION FUNCTION
+        function startNavigationTour(routePoints) {
+            if (!routePoints || routePoints.length < 2 || isTouring) return;
+
+            isTouring = true;
+            controls.enabled = false; // Disable user controls during the tour
+            if (ceiling) ceiling.visible = false; // HIDE THE ROOF!
+
+            const points = routePoints.map(p => new THREE.Vector3(p.x, 1.8, p.y)); // 1.8 is eye-level height
+            const pathCurve = new THREE.CatmullRomCurve3(points);
+
+            // GSAP timeline for smooth animation
+            const timeline = gsap.timeline({
+                onComplete: () => {
+                    controls.enabled = true; // Re-enable controls when tour is done
+                    isTouring = false;
+                    if (ceiling) ceiling.visible = true; // Show the roof again
+                }
+            });
+
+            const tourProgress = { t: 0 };
+
+            timeline.to(tourProgress, {
+                t: 1,
+                duration: routePoints.length * 2.0, // Slower, more deliberate speed
+                ease: "power1.inOut",
+                onUpdate: () => {
+                    const currentPos = pathCurve.getPointAt(tourProgress.t);
+                    camera.position.copy(currentPos);
+
+                    // Get a point slightly ahead on the curve to look at
+                    const lookAtPos = pathCurve.getPointAt(Math.min(tourProgress.t + 0.01, 1));
+                    camera.lookAt(lookAtPos);
+                }
+            });
+        }
+
+        // Updated message listener
+        window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin) return;
+
+            const data = event.data;
+            if (data.type === 'SHOW_ROUTE') {
+                // Draw the path but keep it hidden initially until the tour starts
+                drawNavigationPath(data.payload, false);
+            }
+            if (data.type === 'START_TOUR') {
+                if (currentPathObject) currentPathObject.visible = true; // Make path visible
+                startNavigationTour(data.payload);
+            }
+        });
+
+        // Create the airport
+        createAirport();
+
+        // Update the main animate loop to respect the tour state
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!isTouring) {
+                controls.update(); // Only update controls if not on a tour
+            }
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+
+        // Start the animation
+        animate();
+        // Handle window resize
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+</body>
+
+</html>
