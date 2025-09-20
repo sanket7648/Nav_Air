@@ -22,74 +22,86 @@ export const ArtGuidePage: React.FC = () => {
   const artworks = [
     {
       id: '1',
-      title: 'Sky Reflections',
-      artist: 'Maria Santos',
-      description: 'A stunning installation capturing the movement of clouds and sky through interactive digital displays.',
-      location: 'Terminal 3, Gate B Area',
+      title: 'Mudra Installation',
+      artist: 'Ayush Kasliwal and Incubis Consultants',
+      description: 'Iconic installation featuring 12 monumental hand gestures (mudras) cast in fiberglass and copper, symbolizing Indian dance and yoga traditions. The hands are posed against a backdrop of spun copper discs and stretch across a 240-meter “canyon wall.',
+      location: 'Terminal 3, Canyon Wall',
       category: 'digital',
-      image: 'https://images.pexels.com/photos/1153213/pexels-photo-1153213.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2023',
+      image: 'https://images.squarespace-cdn.com/content/v1/5e8f61083a0eb92736ab4f1f/1588146620291-O6DHPT9ZZJ11PR047OZ3/Canyon%2BWall%252C%2BT3%252C%2BIGI%2BAirport%252C%2BDelhi%252C%2B2012%2B-2%2B-%2BCopy.jpg',
+      year: '2010',
       medium: 'Digital Installation',
       hasAR: true
     },
     {
       id: '2',
-      title: 'Ocean Waves',
-      artist: 'David Chen',
-      description: 'Bronze sculpture inspired by the Pacific Ocean waves, symbolizing the connection between land and sea.',
-      location: 'Terminal 1, Main Concourse',
+      title: 'Sound of Silence',
+      artist: 'Paresh Maity',
+      description: 'A mesmerizing installation comprising 4,500 brass bells, evoking a sense of harmony and stillness, celebrating travel and unity.',
+      location: 'Terminal 1, Arrivals',
       category: 'sculpture',
-      image: 'https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2022',
-      medium: 'Bronze',
+      image: 'https://i.pinimg.com/736x/74/26/50/742650a3e705232b3ca5c16e3b156d84.jpg',
+      year: '2024',
+      medium: 'Brass bells (installation)',
       hasAR: false
     },
     {
       id: '3',
-      title: 'Journey of Light',
-      artist: 'Elena Rodriguez',
-      description: 'A mesmerizing light installation that changes throughout the day, representing the journey of travelers.',
+      title: 'Lightning',
+      artist: 'M.F. Husain',
+      description: 'Large-scale narrative murals blending modern art with Indian history, connecting domestic and international sections.',
       location: 'Terminal 2, Security Checkpoint',
       category: 'installation',
-      image: 'https://images.pexels.com/photos/1274260/pexels-photo-1274260.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2024',
-      medium: 'LED Installation',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_VRPmKs6Z6r9Gs0io_sRbL7ihghhYl-QODA&s',
+      year: '2010',
+      medium: 'Acrylic on canvas, mural',
       hasAR: true
     },
     {
       id: '4',
-      title: 'Cultural Mosaic',
-      artist: 'Ahmed Hassan',
-      description: 'A vibrant mosaic representing the diversity of cultures that pass through San Francisco.',
-      location: 'Terminal 3, Baggage Claim',
+      title: 'Surya Namaskar',
+      artist: 'Satish Gupta',
+      description: 'Satish Gupta',
+      location: 'Terminal 3 (Arrivals Corridor/Departure Pier)',
       category: 'mosaic',
-      image: 'https://images.pexels.com/photos/1187079/pexels-photo-1187079.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2021',
-      medium: 'Ceramic Mosaic',
+      image: 'https://media.fortuneindia.com/fortune-india/import/2018-01/efff585d-4a17-486e-b7cc-574f947b4b9f/Airport-Art-Story-1-(1)-(1).JPG?rect=0,38,1250,703&w=640&auto=format,compress&fit=max&q=80',
+      year: '2010',
+      medium: 'Mixed metals',
       hasAR: false
     },
     {
       id: '5',
-      title: 'Wings of Freedom',
-      artist: 'Sarah Kim',
-      description: 'Abstract painting series depicting the freedom of flight and human aspiration.',
+      title: 'Ball of Joy',
+      artist: 'Sumeet Dua',
+      description: 'A striking, 13 foot tall steel sculpture depicting two abstract human figures, placed at the main entrance roundabout to greet arriving travelers. Meant to symbolize joy, unity, and the universal spirit of journey.',
       location: 'Terminal 1, Gate A Area',
-      category: 'painting',
-      image: 'https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2023',
-      medium: 'Oil on Canvas',
+      category: 'Steel sculpture',
+      image: 'https://images.tribuneindia.com/cms/gall_content/2019/4/2019_4$largeimg17_Wednesday_2019_080028322.jpg',
+      year: '2019 ',
+      medium: 'Steel sculpture',
       hasAR: true
     },
     {
       id: '6',
-      title: 'Digital Horizon',
-      artist: 'Tech Collective',
-      description: 'Interactive digital artwork that responds to passenger movement and creates unique visual experiences.',
+      title: 'Golden Temple Mural',
+      artist: 'Punjab Lalit Kala Akademi ',
+      description: 'A large-scale painted mural of the revered Golden Temple (Harmandir Sahib) rendered on an interior wall, featuring gold toned hues that reflect the temple’s spiritual ambience. Adds a serene visual focal point.',
       location: 'Terminal 2, Food Court',
       category: 'digital',
-      image: 'https://images.pexels.com/photos/1153213/pexels-photo-1153213.jpeg?auto=compress&cs=tinysrgb&w=400',
-      year: '2024',
-      medium: 'Interactive Display',
+      image: 'https://pbs.twimg.com/media/EheCcKkVgAEdqp5.jpg',
+      year: 'Pending Verification',
+      medium: 'Acrylic/tempera wall painting',
+      hasAR: true
+    },
+    {
+      id: '7',
+      title: 'Bronze Bhangra Dancer Sculpture',
+      artist: 'Commissioned (name TBD)',
+      description: 'A life-size bronze figure of a bhangra dancer captured mid-movement, celebrating Punjabi folk danceculture, prominently installed in the arrivals hall.',
+      location: 'Terminal 2, Food Court',
+      category: 'digital',
+      image: 'https://indiacinehub.gov.in/sites/default/files/styles/flexslider_full/public/2024-03/heritage_street_amritsar6.png?itok=X1_nMwhs',
+      year: 'Pending Verification',
+      medium: 'Bronze sculpture',
       hasAR: true
     },
   ];
@@ -136,7 +148,7 @@ export const ArtGuidePage: React.FC = () => {
         {/* Header */}
         <div className="mb-3 max-w-5xl w-full">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
-          <p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>
+          {/*<p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>*/}
         </div>
         {/* Search */}
         <div className="mb-3 max-w-5xl w-full">
