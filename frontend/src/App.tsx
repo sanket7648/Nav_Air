@@ -5,7 +5,7 @@ import { ChatBot } from './components/ChatBot';
 import { HomePage } from './pages/HomePage';
 import { GateNavigationPage } from './pages/GateNavigationPage';
 import { BaggageStatusPage } from './pages/BaggageStatusPage';
-import FlightUpdatesPage from './pages/FlightUpdatesPage';
+import { FlightUpdatesPage } from "./pages/FlightUpdatesPage";
 import { EmergencyAssistancePage } from './pages/EmergencyAssistancePage';
 import { SlotBookingPage } from './pages/SlotBookingPage';
 import { ArtGuidePage } from './pages/ArtGuidePage';
