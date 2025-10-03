@@ -582,7 +582,7 @@ export const BaggageStatusPage: React.FC = () => {
               <form onSubmit={handleCreateSubmit} className="space-y-4 relative z-10">
                 <div>
                   <label className="block text-xs font-medium text-neutral-700 mb-1" htmlFor="bagId">
-                    Baggage ID (optional)
+                    Baggage ID
                   </label>
                   <input
                     id="bagId"
@@ -597,7 +597,7 @@ export const BaggageStatusPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-neutral-700 mb-1" htmlFor="flightNumber">
-                    Flight Number
+                    PNR Number
                   </label>
                   <input
                     id="flightNumber"

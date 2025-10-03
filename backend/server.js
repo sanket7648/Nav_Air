@@ -10,6 +10,7 @@ import flightsRoutes from './routes/flights.js';
 import db, { query, checkDatabaseHealth, closePool } from './config/database.js';
 import { verifyTransporter } from './services/emailService.js';
 import navigationRoutes from './routes/navigation.js';
+import bookingRoutes from './routes/booking.js';
 
 // Load environment variables
 dotenv.config();
@@ -66,6 +67,7 @@ app.use('/api/baggage', baggageRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/flights', flightsRoutes);
 app.use('/api/navigation', navigationRoutes);
+app.use('/api/booking', bookingRoutes);
 
 app.get('/test-user', async (req, res) => {
   const result = await query(
