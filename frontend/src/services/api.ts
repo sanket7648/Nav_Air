@@ -149,6 +149,23 @@ export const baggageAPI = {
   },
 };
 
+// Add a type definition for the booking data
+interface SlotBookingData {
+    serviceType: string;
+    bookingDate: string;
+    bookingTime: string;
+}
+
+export const bookingAPI = {
+  // Create new slot booking
+  create: async (data: SlotBookingData) => {
+    const res = await api.post('/booking', data);
+    return res.data;
+  },
+};
+
+
+
 export const sendLocation = async (locationData: any) => {
   const res = await api.post('/location', locationData);
   return res.data;
