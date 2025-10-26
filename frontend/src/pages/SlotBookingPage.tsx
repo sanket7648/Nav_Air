@@ -17,7 +17,6 @@ import {
 // The library exports its component as a named export, not a default one.
 // This resolves the "Element type is invalid" error.
 import { QRCodeSVG } from 'qrcode.react'; 
-import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { bookingAPI } from '../services/api';
 
@@ -409,7 +408,6 @@ export const SlotBookingPage: React.FC = () => {
           )}
         </div>
       </div>
-      <Footer />
     </>
   );
 };

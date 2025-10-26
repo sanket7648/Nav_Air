@@ -11,7 +11,6 @@ import {
   Share2,
   Clock
 } from 'lucide-react';
-import Footer from '../components/Footer';
 
 export const EmergencyAssistancePage: React.FC = () => {
   const [isLocationShared, setIsLocationShared] = useState(false);
@@ -265,8 +264,6 @@ export const EmergencyAssistancePage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Place Footer at the bottom of the page */}
-      <Footer />
     </div>
   );
 };

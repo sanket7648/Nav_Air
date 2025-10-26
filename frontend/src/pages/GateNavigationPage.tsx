@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import axios from 'axios';
 import { RouteModal } from '../components/RouteModel';
-import Footer from '../components/Footer';
 
 export const GateNavigationPage: React.FC = () => {
   const [from, setFrom] = useState('mainEntrance');
@@ -108,7 +107,6 @@ export const GateNavigationPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <Footer />
 
       <RouteModal
         isOpen={isRouteModalOpen}
