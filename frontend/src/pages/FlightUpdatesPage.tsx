@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import SignInPopup from '../components/SignInPopup';
-import Footer from '../components/Footer';
 
 // Define the structure of flight data we expect from our backend API
 interface Flight {
@@ -536,8 +535,6 @@ export const FlightUpdatesPage: React.FC = () => {
         )}
 
       </div>
-       {/* Footer */}
-       <Footer />
     </div>
   );
 };

@@ -71,4 +71,20 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// <<< START: NEW ROUTE to get bookings for the current user >>>
+router.get('/my-bookings', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await query(
+      'SELECT booking_id, service_type, booking_date, booking_time, status, created_at FROM slot_bookings WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error('Failed to fetch user bookings:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch booking records', error: err.message });
+  }
+});
+// <<< END: NEW ROUTE >>>
+
 export default router;

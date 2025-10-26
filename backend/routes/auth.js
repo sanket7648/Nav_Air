@@ -8,8 +8,43 @@ import { authenticateToken, checkUserVerified } from '../middleware/auth.js';
 import { validateRegistration, validateLogin, validateEmailVerification } from '../middleware/validation.js';
 import crypto from 'crypto';
 import { sendResetPasswordEmail } from '../services/emailService.js';
+import multer from 'multer';
+import path from 'path';
+import { getAvatarBucket } from '../config/mongo.js';
+import { Readable } from 'stream';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const router = express.Router();
+
+const avatarStorage = multer.memoryStorage({
+  destination: (req, file, cb) => {
+    // Ensure the uploads directory exists
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'avatars'); // Adjust path as needed
+    fs.mkdirSync(uploadDir, { recursive: true }); // Create directory if it doesn't exist
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Use user ID and timestamp for unique filename
+    const uniqueSuffix = req.user.id + '-' + Date.now();
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+// --- End Multer Configuration ---
 
 // Google OAuth client
 const googleClient = new OAuth2Client(
@@ -347,33 +382,34 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// Get current user
+// GET /api/auth/me - Get current user (Make sure it includes avatar_url)
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    // req.user is set by authenticateToken and contains id, email, username, is_verified
-    // Fetch additional fields if needed, but always return at least id, email, username
-    const user = req.user || {};
-    // Optionally fetch more details from DB if needed
-    // But always return at least id, email, username
+    const userId = req.user.id;
+    // Fetch fresh user data including the avatar_url
+    const result = await query('SELECT id, email, username, contact_number, country, city, created_at, avatar_url FROM users WHERE id = $1', [userId]);
+
+    if (result.rows.length === 0) {
+       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    const user = result.rows[0];
+
     res.json({
       success: true,
       user: {
         id: user.id,
         email: user.email,
         username: user.username,
-        // Optionally add more fields if available
-        contact_number: user.contact_number || null,
-        country: user.country || null,
-        city: user.city || null,
-        created_at: user.created_at || null
+        contact_number: user.contact_number,
+        country: user.country,
+        city: user.city,
+        created_at: user.created_at,
+        avatarUrl: user.avatar_url ? `/api/images/avatar/${user.avatar_url}` : null
       }
     });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -400,6 +436,97 @@ router.put('/profile', authenticateToken, async (req, res) => {
       success: false,
       message: 'Internal server error'
     });
+  }
+});
+
+// PUT /api/auth/avatar
+router.put('/avatar', authenticateToken, avatarUpload.single('avatar'), async (req, res) => {
+  // <<< ADD THIS LOGGING >>>
+  console.log('--- Avatar Upload Request ---');
+  console.log('req.file:', req.file);
+  console.log('req.body:', req.body); // Also log body in case fields are mixed up
+  // <<< END LOGGING >>>
+  try {
+    if (!req.file) {
+      console.error('req.file is undefined after multer.');
+      return res.status(400).json({ success: false, message: 'No avatar file uploaded.' });
+    }
+    // --- Check buffer existence early ---
+    if (!req.file.buffer || req.file.buffer.length === 0) {
+        console.error('Multer processed the file but the buffer is missing or empty.', req.file); // Log the file object
+        return res.status(400).json({ success: false, message: 'Uploaded file buffer is missing or empty.' });
+    }
+    // --- End buffer check ---
+
+    const userId = req.user.id;
+    const bucket = getAvatarBucket();
+    if (!bucket) {
+        throw new Error("GridFS Avatar Bucket not initialized.");
+    }
+
+    const filename = req.file.originalname;
+    const contentType = req.file.mimetype;
+
+    // --- Create a Promise wrapper using write/end ---
+    const uploadPromise = new Promise((resolve, reject) => {
+        const uploadStream = bucket.openUploadStream(filename, {
+            contentType: contentType,
+            metadata: { userId: userId }
+        });
+        const streamId = uploadStream.id; // Get the ID immediately
+
+        // Handle errors on the GridFS upload stream
+        uploadStream.on('error', (error) => {
+            console.error(`GridFS upload stream error for ID ${streamId}:`, error);
+            reject(new Error('Failed to save avatar to storage.'));
+        });
+
+        // Resolve the promise ONLY when GridFS confirms the file is written
+        uploadStream.on('finish', () => {
+            console.log(`GridFS upload finished event for file ID: ${streamId}`);
+            resolve(streamId); // Resolve with the ID
+        });
+
+        // Write the buffer directly to the stream
+        uploadStream.write(req.file.buffer, (error) => {
+             if (error) {
+                 console.error(`GridFS stream write error for ID ${streamId}:`, error);
+                 return reject(new Error('Failed during avatar data write.'));
+             }
+             // After writing, end the stream to trigger 'finish'
+             uploadStream.end(() => {
+                console.log(`GridFS stream ended for ID ${streamId}. Waiting for finish event.`);
+             });
+        });
+
+    });
+    // --- End Promise wrapper ---
+
+    // Wait for the upload to finish and get the GridFS ID
+    const gridFsObjectId = await uploadPromise;
+    const gridFsId = gridFsObjectId.toString();
+
+    console.log(`Successfully uploaded to GridFS, ID: ${gridFsId}. Updating PostgreSQL.`);
+
+    // Now, update PostgreSQL
+    await query(
+      'UPDATE users SET avatar_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [gridFsId, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Avatar updated successfully.',
+      avatarUrl: `/api/images/avatar/${gridFsId}?t=${Date.now()}` // Add timestamp
+    });
+
+  } catch (error) {
+     // ... (keep the existing detailed error handling from the previous step) ...
+     console.error('Avatar upload process error:', error);
+     if (error instanceof multer.MulterError || error.message.includes('Failed during') || error.message.includes('Failed to save')) {
+         return res.status(500).json({ success: false, message: error.message });
+     }
+    res.status(500).json({ success: false, message: 'Internal server error during avatar upload setup.' });
   }
 });
 
