@@ -20,6 +20,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { sendLocation, queryFlights } from './services/api';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import Footer from './components/Footer';
 
 function AppContent() {
   const location = useLocation();
@@ -109,7 +110,11 @@ function AppContent() {
           <Route path="/auth/callback" element={<GoogleCallback />} />
         </Routes>
       </main>
-      <ChatBot />
+      {/* Footer always at bottom */}
+    <Footer />
+
+    {/* Floating chatbot (optional, fixed position) */}
+    <ChatBot />
     </div>
   );
 }

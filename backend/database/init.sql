@@ -61,3 +61,18 @@ CREATE TABLE IF NOT EXISTS location_analytics (
     error TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ); 
+
+-- Create slot_bookings table
+CREATE TABLE IF NOT EXISTS slot_bookings (
+    booking_id VARCHAR(32) PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    service_type VARCHAR(50) NOT NULL,
+    booking_date DATE NOT NULL,
+    booking_time VARCHAR(10) NOT NULL,
+    status VARCHAR(50) DEFAULT 'Confirmed',
+    qr_code_data TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on user_id for faster lookups
+CREATE INDEX IF NOT EXISTS idx_slot_bookings_user_id ON slot_bookings(user_id);

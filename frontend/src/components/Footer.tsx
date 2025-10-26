@@ -31,7 +31,7 @@ const Footer: React.FC = () => (
         <div>
           <h3 className="font-bold text-lg mb-3 text-white">Contact</h3>
           <p className="text-sm text-gray-300">navair.services@gmail.com</p>
-          <p className="text-sm text-gray-300">+919667093725</p>
+          {/*<p className="text-sm text-gray-300">+919667093725</p>*/}
         </div>
       </div>
       {/* Copyright Section */}

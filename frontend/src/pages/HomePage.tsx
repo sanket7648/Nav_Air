@@ -34,7 +34,6 @@ import {
 import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
 import NavAirLogo from '../assets/NavAir.jpg';
-import Footer from '../components/Footer';
 
 // --- MOCK COMPONENTS & UTILS ---
 
@@ -497,7 +496,6 @@ export const HomePage: React.FC = () => {
 
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

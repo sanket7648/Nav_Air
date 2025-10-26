@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Palette, 
   MapPin, 
@@ -9,102 +9,46 @@ import {
   Search,
   Smartphone,
   Camera,
-  Info
+  Info,
+  ChevronDown // Added ChevronDown for select
 } from 'lucide-react';
-import Footer from '../components/Footer';
+import ALL_AIRPORT_ARTWORKS, { Artwork, AirportArtData } from '../data/artworks'; // Import external data
 
 export const ArtGuidePage: React.FC = () => {
+  // Initialize with the first airport's ID from the mock data
+  const [selectedAirportId, setSelectedAirportId] = useState(ALL_AIRPORT_ARTWORKS[0]?.airportId || '');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [likedArtworks, setLikedArtworks] = useState<string[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<string | null>(null);
 
-  const artworks = [
-    {
-      id: '1',
-      title: 'Mudra Installation',
-      artist: 'Ayush Kasliwal and Incubis Consultants',
-      description: 'Iconic installation featuring 12 monumental hand gestures (mudras) cast in fiberglass and copper, symbolizing Indian dance and yoga traditions. The hands are posed against a backdrop of spun copper discs and stretch across a 240-meter “canyon wall.',
-      location: 'Terminal 3, Canyon Wall',
-      category: 'digital',
-      image: 'https://images.squarespace-cdn.com/content/v1/5e8f61083a0eb92736ab4f1f/1588146620291-O6DHPT9ZZJ11PR047OZ3/Canyon%2BWall%252C%2BT3%252C%2BIGI%2BAirport%252C%2BDelhi%252C%2B2012%2B-2%2B-%2BCopy.jpg',
-      year: '2010',
-      medium: 'Digital Installation',
-      hasAR: true
-    },
-    {
-      id: '2',
-      title: 'Sound of Silence',
-      artist: 'Paresh Maity',
-      description: 'A mesmerizing installation comprising 4,500 brass bells, evoking a sense of harmony and stillness, celebrating travel and unity.',
-      location: 'Terminal 1, Arrivals',
-      category: 'sculpture',
-      image: 'https://i.pinimg.com/736x/74/26/50/742650a3e705232b3ca5c16e3b156d84.jpg',
-      year: '2024',
-      medium: 'Brass bells (installation)',
-      hasAR: false
-    },
-    {
-      id: '3',
-      title: 'Lightning',
-      artist: 'M.F. Husain',
-      description: 'Large-scale narrative murals blending modern art with Indian history, connecting domestic and international sections.',
-      location: 'Terminal 2, Security Checkpoint',
-      category: 'installation',
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_VRPmKs6Z6r9Gs0io_sRbL7ihghhYl-QODA&s',
-      year: '2010',
-      medium: 'Acrylic on canvas, mural',
-      hasAR: true
-    },
-    {
-      id: '4',
-      title: 'Surya Namaskar',
-      artist: 'Satish Gupta',
-      description: 'Satish Gupta',
-      location: 'Terminal 3 (Arrivals Corridor/Departure Pier)',
-      category: 'mosaic',
-      image: 'https://media.fortuneindia.com/fortune-india/import/2018-01/efff585d-4a17-486e-b7cc-574f947b4b9f/Airport-Art-Story-1-(1)-(1).JPG?rect=0,38,1250,703&w=640&auto=format,compress&fit=max&q=80',
-      year: '2010',
-      medium: 'Mixed metals',
-      hasAR: false
-    },
-    {
-      id: '5',
-      title: 'Ball of Joy',
-      artist: 'Sumeet Dua',
-      description: 'A striking, 13 foot tall steel sculpture depicting two abstract human figures, placed at the main entrance roundabout to greet arriving travelers. Meant to symbolize joy, unity, and the universal spirit of journey.',
-      location: 'Terminal 1, Gate A Area',
-      category: 'Steel sculpture',
-      image: 'https://images.tribuneindia.com/cms/gall_content/2019/4/2019_4$largeimg17_Wednesday_2019_080028322.jpg',
-      year: '2019 ',
-      medium: 'Steel sculpture',
-      hasAR: true
-    },
-    {
-      id: '6',
-      title: 'Golden Temple Mural',
-      artist: 'Punjab Lalit Kala Akademi ',
-      description: 'A large-scale painted mural of the revered Golden Temple (Harmandir Sahib) rendered on an interior wall, featuring gold toned hues that reflect the temple’s spiritual ambience. Adds a serene visual focal point.',
-      location: 'Terminal 2, Food Court',
-      category: 'digital',
-      image: 'https://pbs.twimg.com/media/EheCcKkVgAEdqp5.jpg',
-      year: 'Pending Verification',
-      medium: 'Acrylic/tempera wall painting',
-      hasAR: true
-    },
-    {
-      id: '7',
-      title: 'Bronze Bhangra Dancer Sculpture',
-      artist: 'Commissioned (name TBD)',
-      description: 'A life-size bronze figure of a bhangra dancer captured mid-movement, celebrating Punjabi folk danceculture, prominently installed in the arrivals hall.',
-      location: 'Terminal 2, Food Court',
-      category: 'digital',
-      image: 'https://indiacinehub.gov.in/sites/default/files/styles/flexslider_full/public/2024-03/heritage_street_amritsar6.png?itok=X1_nMwhs',
-      year: 'Pending Verification',
-      medium: 'Bronze sculpture',
-      hasAR: true
-    },
-  ];
+  // Get the currently selected airport's data
+  const currentAirportData = useMemo(() => {
+    // Simulates fetching data by airport ID
+    return ALL_AIRPORT_ARTWORKS.find(a => a.airportId === selectedAirportId) || { artworks: [] as Artwork[] };
+  }, [selectedAirportId]);
+
+  // --- Filtering Logic (now based on currentAirportData.artworks) ---
+  const filteredArtworks = useMemo(() => {
+    let artworks = currentAirportData.artworks;
+
+    // 1. Filter by Category
+    if (selectedFilter !== 'all') {
+        artworks = artworks.filter(artwork => artwork.category === selectedFilter);
+    }
+    
+    // 2. Filter by Search Term
+    if (searchTerm) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        artworks = artworks.filter(artwork => 
+            artwork.title.toLowerCase().includes(lowerSearchTerm) ||
+            artwork.artist.toLowerCase().includes(lowerSearchTerm)
+        );
+    }
+
+    return artworks;
+  }, [currentAirportData, selectedFilter, searchTerm]);
+  // --- End Filtering Logic ---
 
   const filters = [
     { key: 'all', label: 'All Artworks' },
@@ -114,13 +58,6 @@ export const ArtGuidePage: React.FC = () => {
     { key: 'painting', label: 'Painting' },
     { key: 'mosaic', label: 'Mosaic' },
   ];
-
-  const filteredArtworks = artworks.filter(artwork => {
-    const matchesFilter = selectedFilter === 'all' || artwork.category === selectedFilter;
-    const matchesSearch = artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          artwork.artist.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
 
   const toggleLike = (artworkId: string) => {
     setLikedArtworks(prev => 
@@ -138,6 +75,12 @@ export const ArtGuidePage: React.FC = () => {
     return patterns[index % patterns.length];
   };
 
+  const selectedArtworkDetails = useMemo(() => {
+      // Find the artwork in the current airport's data
+      return currentAirportData.artworks.find(a => a.id === selectedArtwork);
+  }, [selectedArtwork, currentAirportData]);
+
+
   return (
     <>
       {/* The background is now a pink-only gradient */}
@@ -148,8 +91,35 @@ export const ArtGuidePage: React.FC = () => {
         {/* Header */}
         <div className="mb-3 max-w-5xl w-full">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-0.5">Art & Culture Guide</h2>
-          {/*<p className="text-gray-600 text-sm">Discover the artistic treasures of SFO</p>*/}
         </div>
+        
+        {/* --- Airport Selector --- */}
+        <div className="mb-3 max-w-5xl w-full">
+            <label htmlFor="airport-selector" className="block text-sm font-medium text-gray-700 mb-1">
+                Select Airport
+            </label>
+            <div className="relative">
+                <select
+                    id="airport-selector"
+                    value={selectedAirportId}
+                    onChange={(e) => {
+                        setSelectedAirportId(e.target.value);
+                        setSelectedFilter('all'); // Reset filters on airport change
+                        setSearchTerm('');
+                    }}
+                    className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base font-semibold bg-white"
+                >
+                    {ALL_AIRPORT_ARTWORKS.map((airport) => (
+                        <option key={airport.airportId} value={airport.airportId}>
+                            {airport.airportName}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            </div>
+        </div>
+        {/* --- END Airport Selector --- */}
+
         {/* Search */}
         <div className="mb-3 max-w-5xl w-full">
           <div className="relative">
@@ -181,9 +151,11 @@ export const ArtGuidePage: React.FC = () => {
             ))}
           </div>
         </div>
+        
         {/* Artworks Grid */}
         <div className="grid grid-cols-2 gap-2 auto-rows-[120px] max-w-5xl w-full">
-          {filteredArtworks.map((artwork, index) => (
+        {filteredArtworks.length > 0 ? (
+          filteredArtworks.map((artwork, index) => (
             <div
               key={artwork.id}
               className={`${getGridClass(index)} bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden group cursor-pointer`}
@@ -226,66 +198,65 @@ export const ArtGuidePage: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+             <div className="col-span-2 text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-200">
+                <Palette className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500 font-medium">No artwork found for the selected airport or filter.</p>
+             </div>
+        )}
         </div>
 
         {/* Artwork Detail Modal */}
-        {selectedArtwork && (
+        {selectedArtwork && selectedArtworkDetails && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4">
             <div className="bg-white rounded-t-3xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-              {(() => {
-                const artwork = artworks.find(a => a.id === selectedArtwork);
-                if (!artwork) return null;
-                
-                return (
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-gray-900">{artwork.title}</h3>
-                      <button onClick={() => setSelectedArtwork(null)} className="p-2 hover:bg-gray-100 rounded-full">×</button>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">{selectedArtworkDetails.title}</h3>
+                  <button onClick={() => setSelectedArtwork(null)} className="p-2 hover:bg-gray-100 rounded-full">×</button>
+                </div>
+                <img src={selectedArtworkDetails.image} alt={selectedArtworkDetails.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Artist</h4>
+                    <p className="text-gray-600">{selectedArtworkDetails.artist}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Description</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">{selectedArtworkDetails.description}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Year</h4>
+                      <p className="text-gray-600">{selectedArtworkDetails.year}</p>
                     </div>
-                    <img src={artwork.image} alt={artwork.title} className="w-full h-48 object-cover rounded-lg mb-4" />
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">Artist</h4>
-                        <p className="text-gray-600">{artwork.artist}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">Description</h4>
-                        <p className="text-gray-600 text-sm leading-relaxed">{artwork.description}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-1">Year</h4>
-                          <p className="text-gray-600">{artwork.year}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-1">Medium</h4>
-                          <p className="text-gray-600">{artwork.medium}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-1">Location</h4>
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">{artwork.location}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-4 mt-6">
-                      <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                        <MapPin className="w-4 h-4 mr-2 inline" />
-                        Get Directions
-                      </button>
-                      {artwork.hasAR && (
-                        <button className="flex-1 bg-yellow-400 text-yellow-900 py-3 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
-                          <Smartphone className="w-4 h-4 mr-2 inline" />
-                          View in AR
-                        </button>
-                      )}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Medium</h4>
+                      <p className="text-gray-600">{selectedArtworkDetails.medium}</p>
                     </div>
                   </div>
-                );
-              })()}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Location</h4>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{selectedArtworkDetails.location}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-4 mt-6">
+                  <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    <MapPin className="w-4 h-4 mr-2 inline" />
+                    Get Directions
+                  </button>
+                  {selectedArtworkDetails.hasAR && (
+                    <button className="flex-1 bg-yellow-400 text-yellow-900 py-3 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
+                      <Smartphone className="w-4 h-4 mr-2 inline" />
+                      View in AR
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -293,14 +264,14 @@ export const ArtGuidePage: React.FC = () => {
         {/* Stats */}
         <div className="mt-8 max-w-5xl w-full">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Collection Stats</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Collection Stats for {currentAirportData.airportName || 'Selected Airport'}</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{artworks.length}</div>
-                <div className="text-sm text-gray-600">Artworks</div>
+                <div className="text-2xl font-bold text-blue-600">{currentAirportData.artworks.length}</div>
+                <div className="text-sm text-gray-600">Total Artworks</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{artworks.filter(a => a.hasAR).length}</div>
+                <div className="text-2xl font-bold text-green-600">{currentAirportData.artworks.filter(a => a.hasAR).length}</div>
                 <div className="text-sm text-gray-600">AR Enabled</div>
               </div>
               <div className="text-center">
@@ -311,10 +282,6 @@ export const ArtGuidePage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Place Footer at the bottom of the page */}
-      <Footer />
     </>
   );
 };
-
-export default ArtGuidePage;
