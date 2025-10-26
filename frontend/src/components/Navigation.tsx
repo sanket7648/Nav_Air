@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom'; // <-- Link is imported
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, 
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NavAirLogo from '../assets/NavAir.jpg';
+// Note: Link is now imported from 'react-router-dom' at the top, not here.
 
 // Navigation data
 const navItems = [
@@ -79,10 +80,18 @@ const UserProfileDropdown: React.FC<{ user: any; onLogout: () => void }> = ({ us
               </div>
               
               <div className="space-y-1">
-                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg flex items-center space-x-2">
+                {/* --- THIS IS THE FIX --- */}
+                <Link 
+                  to="/profile" 
+                  onClick={() => setIsOpen(false)} // Close dropdown on click
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg flex items-center space-x-2"
+                >
                   <User className="w-4 h-4" />
                   <span>Profile</span>
-                </button>
+                </Link>
+                {/* ---------------------- */}
+
+                {/* I'm leaving these as buttons, assuming they open modals or are not yet implemented */}
                 <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg flex items-center space-x-2">
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
@@ -120,14 +129,16 @@ const MobileBottomNav = () => {
         const isActive = location.pathname === item.path;
         const Icon = item.icon;
         return (
-          <a
-            href={item.path}
+          // --- FIX 2: Replaced <a> with <Link> ---
+          <Link
+            to={item.path}
             key={item.path}
             className={`flex flex-col items-center text-xs font-medium px-2 ${isActive ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
           >
             <Icon className={`w-6 h-6 mb-0.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
             <span>{item.label}</span>
-          </a>
+          </Link>
+          // ------------------------------------
         );
       })}
     </nav>
@@ -140,7 +151,6 @@ export const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
-
 
   const isAuthPage = ['/login', '/register', '/verify-email', '/auth/callback', '/otp-verify', '/otp-success', '/forgot-password', '/reset-password'].includes(location.pathname);
 
@@ -176,19 +186,21 @@ export const Navigation: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top Bar */}
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <a href="/" className="flex items-center space-x-2">
+            {/* --- FIX 3: Replaced <a> with <Link> for Logo --- */}
+            <Link to="/" className="flex items-center space-x-2">
               <img src={NavAirLogo} alt="NavAir" className="w-14 h-14 object-cover" />
               <span className="text-xl font-bold text-white">NavAir</span>
-            </a>
+            </Link>
+            {/* ----------------------------------------------- */}
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
-                  <a
-                    href={item.path}
+                  // --- FIX 4: Replaced <a> with <Link> for Desktop Nav ---
+                  <Link
+                    to={item.path}
                     key={item.path}
                     className={`relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 no-underline hover:no-underline focus:no-underline ${
                       isActive 
@@ -205,7 +217,8 @@ export const Navigation: React.FC = () => {
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
-                  </a>
+                  </Link>
+                  // --------------------------------------------------------
                 );
               })}
             </div>
@@ -219,7 +232,6 @@ export const Navigation: React.FC = () => {
             </button>
 
             {/* Notifications */}
-
             <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all duration-300 transform hover:scale-110 active:scale-95 hover:shadow-lg relative">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
@@ -230,20 +242,20 @@ export const Navigation: React.FC = () => {
                 <UserProfileDropdown user={user} onLogout={handleLogout} />
               ) : (
                 <div className="flex items-center space-x-2">
-                  <a href="/login" className="px-4 py-2 text-sm font-semibold text-white bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 hover:border-white/50 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
+                  {/* --- FIX 5: Replaced <a> with <Link> for Auth --- */}
+                  <Link to="/login" className="px-4 py-2 text-sm font-semibold text-white bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 hover:border-white/50 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
                     Sign In
-                  </a>
-                  <a href="/register" className="px-4 py-2 text-sm font-semibold text-white bg-purple-600/80 backdrop-blur-sm border border-purple-400/50 hover:bg-purple-700/90 hover:border-purple-300/70 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
+                  </Link>
+                  <Link to="/register" className="px-4 py-2 text-sm font-semibold text-white bg-purple-600/80 backdrop-blur-sm border border-purple-400/50 hover:bg-purple-700/90 hover:border-purple-300/70 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl no-underline hover:no-underline focus:no-underline" style={{ textDecoration: 'none' }}>
                     Register
-                  </a>
+                  </Link>
+                  {/* ----------------------------------------------- */}
                 </div>
               )}
             </div>
           </div>
         </div>
       </motion.nav>
-
-
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />

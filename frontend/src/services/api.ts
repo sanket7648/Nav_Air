@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const FILE_BASE_URL = API_BASE_URL.replace('/api', '');
 
 // Create axios instance
 const api = axios.create({
@@ -69,14 +70,34 @@ export const authAPI = {
   // Get current user
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
+    if (response.data.user?.avatar_url && !response.data.user.avatar_url.startsWith('http')) {
+        response.data.user.avatar_url = `${FILE_BASE_URL}${response.data.user.avatar_url}`;
+    }
     return response.data.user;
   },
 
-  // Update user profile
+ // Update user profile
   updateProfile: async (profileData: { city?: string; country?: string }) => {
     const response = await api.put('/auth/profile', profileData);
     return response.data;
   },
+
+  uploadAvatar: async (avatarFile: File) => {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const response = await api.put('/auth/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Important for file uploads
+      },
+    });
+     // <<< MODIFICATION: Prepend base URL to avatar_url >>>
+     if (response.data?.avatarUrl && !response.data.avatarUrl.startsWith('http')) {
+        response.data.avatarUrl = `${FILE_BASE_URL}${response.data.avatarUrl}`;
+    }
+    return response.data; // Should return { success: true, message: '...', avatarUrl: '...' }
+  },
+  
 
   // Google OAuth URL
   getGoogleAuthUrl: () => {
@@ -147,6 +168,10 @@ export const baggageAPI = {
     const res = await api.delete(`/baggage/${bagId}`);
     return res.data;
   },
+  getMyBaggage: async () => {
+    const res = await api.get('/baggage/my-baggage');
+    return res.data.data; // Assuming backend returns { success: true, data: [...] }
+  },
 };
 
 // Add a type definition for the booking data
@@ -162,10 +187,47 @@ export const bookingAPI = {
     const res = await api.post('/booking', data);
     return res.data;
   },
+  // <<< START: NEW FUNCTION to get user's bookings >>>
+  getMyBookings: async () => {
+    const res = await api.get('/booking/my-bookings');
+    return res.data.data; // Assuming backend returns { success: true, data: [...] }
+  },
+  // <<< END: NEW FUNCTION >>>
 };
 
+export const artSubmissionAPI = {
+  submitArtwork: async (submissionData: {
+      title: string;
+      description?: string;
+      location?: string;
+      artworkImage: File;
+  }) => {
+      const formData = new FormData();
+      formData.append('title', submissionData.title);
+      if (submissionData.description) formData.append('description', submissionData.description);
+      if (submissionData.location) formData.append('location', submissionData.location);
+      formData.append('artworkImage', submissionData.artworkImage);
 
-
+      const response = await api.post('/art-submissions', formData, {
+          headers: {
+              'Content-Type': 'multipart/form-data',
+          },
+      });
+      return response.data;
+  },
+  getMySubmissions: async () => {
+      const res = await api.get('/art-submissions/my-submissions');
+      // <<< MODIFICATION: Prepend base URL to image_url >>>
+      if (res.data.data && Array.isArray(res.data.data)) {
+          res.data.data.forEach((item: any) => {
+              if (item.image_url && !item.image_url.startsWith('http')) {
+                  item.image_url = `${FILE_BASE_URL}${item.image_url}`;
+              }
+          });
+      }
+      return res.data.data;
+  }
+};
 export const sendLocation = async (locationData: any) => {
   const res = await api.post('/location', locationData);
   return res.data;
