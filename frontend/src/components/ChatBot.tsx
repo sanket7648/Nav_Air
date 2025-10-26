@@ -1,6 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, Mic, MicOff } from 'lucide-react'; // Import Mic and MicOff icons
+import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
+import SignInPopup from './SignInPopup'; // <-- Import SignInPopup
+
+// --- Speech Recognition Setup ---
+// Check browser compatibility
+const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+if (recognition) {
+  recognition.continuous = true; // Keep listening even after pauses
+  recognition.interimResults = true; // Get results as the user speaks
+  recognition.lang = 'en-US'; // Set language
+}
+// --- End Speech Recognition Setup ---
 
 const PREDEFINED_QUERIES = [
   'What is NavAir?',
@@ -51,34 +65,146 @@ export const ChatBot: React.FC = () => {
   const [input, setInput] = useState('');
   const chatRef = useRef<HTMLDivElement>(null);
 
+  // --- Auth State ---
+  const { isAuthenticated } = useAuth(); // <-- Use authentication context
+  const [showSignInPopup, setShowSignInPopup] = useState(false); // <-- State for sign-in popup
+  // --- End Auth State ---
+
+  // --- Speech Recognition State ---
+  const [isListening, setIsListening] = useState(false);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // --- End Speech Recognition State ---
+
   useEffect(() => {
     if (open) {
       setTimeout(() => chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }), 100);
     }
   }, [messages, open]);
 
-  // Listen for custom event to open chatbot from navbar icon
   useEffect(() => {
-    const handler = () => setOpen(true);
+    const handler = () => {
+      // Check authentication before opening via event
+      if (isAuthenticated) {
+        setOpen(true);
+      } else {
+        setShowSignInPopup(true);
+      }
+    };
     window.addEventListener('open-navair-chatbot', handler);
     return () => window.removeEventListener('open-navair-chatbot', handler);
-  }, []);
+  }, [isAuthenticated]); // <-- Add isAuthenticated dependency
 
   useEffect(() => {
-    // Load chat history
     const history = localStorage.getItem(LOCAL_HISTORY_KEY);
     if (history) setMessages(JSON.parse(history));
   }, []);
 
   useEffect(() => {
-    // Save chat history
     localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(messages));
   }, [messages]);
+
+  // --- Speech Recognition Handlers ---
+  const stopListening = useCallback(() => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsListening(false);
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = null;
+      }
+      console.log('Speech recognition stopped.');
+    }
+  }, [isListening]);
+
+  const startListening = useCallback(() => {
+    if (recognition && !isListening) {
+      try {
+        recognition.start();
+        setIsListening(true);
+        console.log('Speech recognition started.');
+
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = setTimeout(stopListening, 20000);
+
+      } catch (error) {
+        if ((error as DOMException).name === 'NotAllowedError' || (error as DOMException).name === 'SecurityError') {
+             alert("Microphone access denied. Please allow microphone access in your browser settings to use voice input.");
+        } else {
+             console.error("Speech recognition could not start:", error);
+             alert("Could not start voice input. Please ensure your microphone is working and permissions are granted.");
+        }
+        setIsListening(false);
+      }
+    }
+  }, [isListening, stopListening]);
+
+  useEffect(() => {
+    if (!recognition) return;
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      const currentTranscript = (finalTranscript || interimTranscript).trim();
+      setInput(currentTranscript);
+
+      if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = setTimeout(stopListening, 20000);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+       if (event.error === 'no-speech') {
+        console.log('No speech detected.');
+       } else if (event.error === 'audio-capture') {
+        alert("Audio capture failed. Please check your microphone connection.");
+       } else if (event.error !== 'aborted') {
+        alert(`Voice input error: ${event.error}. Please try again.`);
+       }
+      stopListening();
+    };
+
+    recognition.onend = () => {
+        if (isListening) {
+          console.log('Recognition ended.');
+          setIsListening(false);
+          if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current);
+            silenceTimeoutRef.current = null;
+          }
+        }
+    };
+
+    return () => {
+      stopListening();
+    };
+  }, [isListening, stopListening]);
+
+  const toggleListening = () => {
+    if (!recognition) {
+        alert("Sorry, your browser doesn't support speech recognition.");
+        return;
+    }
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+  // --- End Speech Recognition Handlers ---
 
   const handleQueryClick = async (query: string) => {
     setMessages((prev) => [...prev, { sender: 'user', text: query }]);
     setShowQueries(false);
     setLoading(true);
+    stopListening();
     setTimeout(async () => {
       if (PREDEFINED_RESPONSES[query]) {
         setMessages((prev) => [...prev, { sender: 'bot', text: PREDEFINED_RESPONSES[query].response }]);
@@ -91,7 +217,6 @@ export const ChatBot: React.FC = () => {
           setSessionEnded(true);
         }
       } else {
-        // Fallback to Gemini API
         const geminiResponse = await fetchGemini(query);
         setMessages((prev) => [...prev, { sender: 'bot', text: geminiResponse }]);
         setSessionEnded(false);
@@ -100,7 +225,6 @@ export const ChatBot: React.FC = () => {
     }, 800);
   };
 
-  // Handle user-typed input (always goes to Gemini)
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
@@ -108,6 +232,7 @@ export const ChatBot: React.FC = () => {
     setInput('');
     setShowQueries(false);
     setLoading(true);
+    stopListening();
     const geminiResponse = await fetchGemini(trimmed);
     setMessages((prev) => [...prev, { sender: 'bot', text: geminiResponse }]);
     setLoading(false);
@@ -115,10 +240,8 @@ export const ChatBot: React.FC = () => {
   };
 
   const fetchGemini = async (query: string) => {
-    // Use Vite env variable for Gemini API key
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     if (!apiKey) return 'Sorry, Gemini API key is not configured.';
-    // NavAir system prompt for Gemini
     const navAirContext = `You are NavAir's virtual assistant. NavAir is an AI-powered airport platform offering:
     - Smart navigation (AR directions, gate info)
     - Real-time baggage tracking
@@ -128,21 +251,40 @@ export const ChatBot: React.FC = () => {
     - Secure registration and login
     The founders of NavAir are Sanket Jha, Dibangi Dutta, Arpita Biswas, and K Bhawana Sai.
     Always answer as a helpful, concise, user-friendly NavAir assistant. If a question is not about NavAir, politely redirect the user.`;
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
     try {
-      const res = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [
-            { role: 'user', parts: [{ text: navAirContext }] },
-            { role: 'user', parts: [{ text: query }] }
+            { role: 'user', parts: [{ text: `${navAirContext}\n\nUser query: ${query}` }] }
           ]
         })
       });
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Gemini API Error:', res.status, errorText);
+        let errorMessage = `Sorry, there was an error processing your request (${res.status}).`;
+        try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson?.error?.message) {
+                errorMessage += ` Details: ${errorJson.error.message}`;
+            }
+        } catch (parseError) { /* Ignore */ }
+        return errorMessage;
+      }
       const data = await res.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not get a response.';
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+        console.warn('Unexpected Gemini response structure:', data);
+        return 'Sorry, I received an unexpected response from the AI assistant.';
+      }
+      return data.candidates[0].content.parts[0].text;
     } catch (e) {
-      return 'Sorry, there was an error connecting to Gemini.';
+        console.error('Network error connecting to Gemini:', e);
+        return 'Sorry, there was a network error connecting to the AI assistant.';
     }
   };
 
@@ -151,21 +293,33 @@ export const ChatBot: React.FC = () => {
     setShowQueries(true);
     setSessionEnded(false);
     localStorage.removeItem(LOCAL_HISTORY_KEY);
+    stopListening();
   };
+
+  // --- Handler for opening the chatbot/popup ---
+  const handleOpenChatbot = () => {
+    if (isAuthenticated) {
+      setOpen(true);
+    } else {
+      setShowSignInPopup(true);
+    }
+  };
+  // --- End Handler ---
 
   return (
     <>
-      {/* Chatbot Floating Icon (always bottom right, all screens) */}
+      {/* --- Render Sign In Popup conditionally --- */}
+      {showSignInPopup && <SignInPopup onClose={() => setShowSignInPopup(false)} />}
+
       <button
         className="fixed bottom-8 right-8 z-50 bg-blue-600 border border-blue-600 shadow-lg rounded-full p-4 flex items-center justify-center hover:bg-blue-700 transition-all duration-300"
         style={{ boxShadow: '0 4px 24px 0 rgba(59,130,246,0.15)' }}
         aria-label="Open Chatbot"
-        onClick={() => setOpen(true)}
+        onClick={handleOpenChatbot} // <-- Use the new handler
       >
         <MessageCircle className="w-7 h-7 text-white" />
       </button>
 
-      {/* Chatbot Modal */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -173,7 +327,7 @@ export const ChatBot: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 40 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-8 right-8 z-50 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg bg-white rounded-2xl shadow-2xl border border-blue-600 flex flex-col overflow-hidden"
+            className="fixed bottom-8 right-8 z-[60] w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg bg-white rounded-2xl shadow-2xl border border-blue-600 flex flex-col overflow-hidden" // Increased z-index
             style={{ boxShadow: '0 8px 32px 0 rgba(59,130,246,0.18)' }}
           >
             {/* Header */}
@@ -236,13 +390,25 @@ export const ChatBot: React.FC = () => {
                 </div>
               )}
             </div>
-            {/* Footer with input */}
+            {/* Footer with input and mic button */}
             <div className="px-4 py-2 bg-blue-50 border-t border-blue-100 flex flex-col gap-2">
               <div className="flex items-center gap-2">
+                {/* --- Mic Button --- */}
+                {recognition && ( // Only show mic button if API is supported
+                  <button
+                    onClick={toggleListening}
+                    className={`p-2 rounded-lg transition-colors ${isListening ? 'bg-red-200 text-red-600 hover:bg-red-300 animate-pulse' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                    aria-label={isListening ? 'Stop recording' : 'Start recording'}
+                    disabled={loading} // Disable mic when bot is thinking
+                  >
+                    {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
+                )}
+                {/* --- End Mic Button --- */}
                 <input
                   type="text"
                   className="flex-1 rounded-lg border border-blue-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Type your question..."
+                  placeholder={isListening ? "Listening..." : "Type your question..."}
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
@@ -258,9 +424,9 @@ export const ChatBot: React.FC = () => {
               </div>
               <div className="flex items-center justify-between mt-1">
                 <button
-                  className="text-blue-600 text-xs font-semibold hover:underline"
+                  className="text-blue-600 text-xs font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleEndChat}
-                  disabled={messages.length === 0}
+                  disabled={messages.length === 0 && !loading} // Disable if no messages and not loading
                 >
                   End Chat
                 </button>
