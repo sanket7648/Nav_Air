@@ -14,7 +14,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { baggageAPI, authUtils } from '../services/api';
-import Footer from '../components/Footer';
 
 // --- Floating Baggage Animation Component ---
 const FloatingBaggage: React.FC = () => {
@@ -640,8 +639,6 @@ export const BaggageStatusPage: React.FC = () => {
           </div>
         )}
       </div>
-      {/* Place Footer at the bottom of the page */}
-      <Footer />
     </>
   );
 };

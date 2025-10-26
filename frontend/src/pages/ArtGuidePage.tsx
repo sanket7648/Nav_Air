@@ -12,7 +12,6 @@ import {
   Info,
   ChevronDown // Added ChevronDown for select
 } from 'lucide-react';
-import Footer from '../components/Footer';
 import ALL_AIRPORT_ARTWORKS, { Artwork, AirportArtData } from '../data/artworks'; // Import external data
 
 export const ArtGuidePage: React.FC = () => {
@@ -283,8 +282,6 @@ export const ArtGuidePage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Place Footer at the bottom of the page */}
-      <Footer />
     </>
   );
 };
